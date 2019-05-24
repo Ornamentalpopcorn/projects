@@ -1,0 +1,2 @@
+[20-May-2019 14:15:52 Asia/Manila] PHP Parse error:  syntax error, unexpected 'SUM' (T_STRING) in /home1/epasadilla/public_html/dev-smpp/auth_directory/dir_maintenance/prototype/index.php on line 13
+[20-May-2019 17:14:42 Asia/Manila] PHP Fatal error:  Class Productivity contains 1 abstract method and must therefore be declared abstract or implement the remaining methods (ProductivityCommandInterface::deleteSource) in /home1/epasadilla/public_html/dev-smpp/auth_directory/dir_maintenance/prototype/includes/model/class/Productivity.php on line 194
