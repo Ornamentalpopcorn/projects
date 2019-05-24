@@ -789,20 +789,20 @@ $(document).ready(function(){
                   cache: false,
                   beforeSend: function() {
 
-
+                      $("#checkReportChanges").html('<br><br><center> <div class="col-xs-12 text-center"><button type="button" style="background-color: #ffffff; border-color:#ffffff; margin-top:-25px;" class="btn  btn-lrg ajax" title="Fetching Data"> <i class="fa fa-spinner fa-spin "></i>&nbsp; Loading...</button></div></center>')
                   },
                   success: function (data) {
                       $("#data-apply").attr("disabled", false)
 
 
                       $("#displayResult").fadeIn()
-                      $("#displayResult").html(data)
+                      // $("#displayResult").html(data)
                       setTimeout(function() {
                         $("#displayResult").fadeOut()
                       } , 5000);
 
                       if (data == 1) {
-                          alert('Successfully applied chanes to report!')
+                          alert('Successfully applied changes to report!')
                           $("#checkReportChanges").html("<br><br> &gt; <u><a target='_blank' href='https://www.bellkenz.com/dev-smpp/auth_directory/dir_productivity/productivity_report.php'>VIEW APPLIED CHANGES</a></u>")
                       }
 

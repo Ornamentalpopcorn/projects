@@ -514,12 +514,24 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
   {
     global $conn_pdo;
     try {
- 
+
       $check_syntax = $this->checkQuerySyntax($this->source, $this->source);
       if ($check_syntax == 1) { // syntax is correct
 
             $filter_sql = explode("GROUP BY", $this->source);
             $source_sql = $filter_sql[0];
+
+            if (strpos($source_sql, "salesdata_senior_by_product") !== FALSE) {
+              $sale_type = " AND sale_type IN ('ON-SITE','OFF-SITE') AND sale_specific_type IN ('SENIOR') ";
+              $other_type = " AND sale_type IN ('ON-SITE','OFF-SITE') ";
+              $type = "ON-SITE";
+              $specific_type = "SENIOR";
+            } elseif (strpos($source_sql, "salesdata_booked") !== FALSE) {
+              $sale_type = " AND sale_type = 'DISPENSING' ";
+              $other_type = $sale_type;
+              $type = "DISPENSING";
+              $specific_type = "";
+            }
 
             if (strpos($source_sql, "AMOUNT") !== FALSE || strpos($source_sql, "amount") !== FALSE) {
 
@@ -527,7 +539,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
               FROM md_profile_list_by_class as b
               WHERE 1=1
                     AND status IN ('JEDI','IPG','PADAWAN')
-              LIMIT 1
+
               ";
               $data = $this->querySelect($sql);
               foreach ($data as $row) {
@@ -557,7 +569,6 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                           }
                         }
                       }
-
                       // FETCH AMOUNT FROM QUERY
                       // FETCH AMOUNT FROM QUERY
 
@@ -567,7 +578,8 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                                   AND crediting_date = '$date'
                                   AND is_checked = 1
                                   AND is_source = 1
-                                  AND sale_type IN ('ON-SITE','OFF-SITE') ";
+                                  $other_type
+                                  ";
                             $stmt = $conn_pdo->prepare($sql);
                             $stmt->execute();
 
@@ -577,7 +589,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                                   AND md_code = '$md_code'
                                   AND crediting_date = '$date'
                                   AND is_checked = 1
-                                  AND sale_type IN ('ON-SITE','OFF-SITE')
+                                  $other_type
                             ";
                             $stmt = $conn_pdo->prepare($sql);
                             $stmt->execute();
@@ -605,7 +617,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
 
                             $stmt_insert->bindValue(":md_code" , $md_code, PDO::PARAM_STR);
                             $stmt_insert->bindValue(":crediting_date" , $date, PDO::PARAM_STR);
-                            $stmt_insert->bindValue(":sale_type" , "ON-SITE", PDO::PARAM_STR);
+                            $stmt_insert->bindValue(":sale_type" , $type, PDO::PARAM_STR);
                             $stmt_insert->bindValue(":total_amount" , $amount, PDO::PARAM_STR);
                             $stmt_insert->bindValue(":is_checked" , "1", PDO::PARAM_STR);
                             $stmt_insert->bindValue(":is_source" , "1", PDO::PARAM_STR);
@@ -617,7 +629,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                                   AND crediting_date = '$date'
                                   AND is_checked = 1
                                   AND is_source = 1
-                                  AND sale_type IN ('ON-SITE','OFF-SITE') AND sale_specific_type IN ('SENIOR')
+                                  $sale_type
                             ";
                             $stmt = $conn_pdo->prepare($sql);
                             $stmt->execute();
@@ -628,7 +640,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                                 AND md_code = '$md_code'
                                 AND crediting_date = '$date'
                                 AND is_checked = 1
-                                AND sale_type IN ('ON-SITE','OFF-SITE') AND sale_specific_type IN ('SENIOR')
+                                $sale_type
                             ";
                             $stmt = $conn_pdo->prepare($sql);
                             $stmt->execute();
@@ -659,8 +671,8 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
 
                             $stmt_insert->bindValue(":md_code" , $md_code, PDO::PARAM_STR);
                             $stmt_insert->bindValue(":crediting_date" , $date, PDO::PARAM_STR);
-                            $stmt_insert->bindValue(":sale_type" , "ON-SITE", PDO::PARAM_STR);
-                            $stmt_insert->bindValue(":sale_specific_type" , "SENIOR", PDO::PARAM_STR);
+                            $stmt_insert->bindValue(":sale_type" , $sale_type, PDO::PARAM_STR);
+                            $stmt_insert->bindValue(":sale_specific_type" , $specific_type, PDO::PARAM_STR);
                             $stmt_insert->bindValue(":total_amount" , $amount, PDO::PARAM_STR);
                             $stmt_insert->bindValue(":is_checked" , "1", PDO::PARAM_STR);
                             $stmt_insert->bindValue(":is_source" , "1", PDO::PARAM_STR);
