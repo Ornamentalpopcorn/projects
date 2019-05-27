@@ -307,7 +307,7 @@ trait ProductivityCommand
 
       $txt .= "<a href='#' id='data-displayvalue' class='btn btn-info btn btn-xs' style='margin:3px; float:right;'><i class='fas fa-poll-h'></i> DISPLAY VALUE</a>";
       $txt .= "<a href='#' id='data-save' class='btn btn-success btn btn-xs' style='margin:3px; float:right;'><i class='fas fa-save'></i> SAVE SOURCE</a>";
-      $txt .= "<a href='#' id='data-apply' class='btn btn-primary btn btn-xs' style='margin:3px; float:right;'><i class='fas fa-marker'></i></i> APPLY TO REPORT</a>";
+      // $txt .= "<a href='#' id='data-apply' class='btn btn-primary btn btn-xs' style='margin:3px; float:right;'><i class='fas fa-marker'></i></i> APPLY TO REPORT</a>";
       $txt .= "</div'>";
       $txt .= "<div id='displayResult'></div>";
       $txt .= "</div>";
@@ -673,7 +673,7 @@ trait ProductivityCommand
             // $txt .= "<div class='col-md-4'>";
             $txt .= "<a href='#' id='data-displayvalue' class='btn btn-info btn btn-xs' style='margin:3px; float:right;'><i class='fas fa-poll-h'></i> DISPLAY VALUE</a>";
             $txt .= "<a href='#' id='data-save' class='btn btn-success btn btn-xs' style='margin:3px; float:right;'><i class='fas fa-save'></i> SAVE SOURCE</a>";
-            $txt .= "<a href='#' id='data-apply' class='btn btn-primary btn btn-xs' style='margin:3px; float:right;'><i class='fas fa-marker'></i></i> APPLY TO REPORT</a>";
+            // $txt .= "<a href='#' id='data-apply' class='btn btn-primary btn btn-xs' style='margin:3px; float:right;'><i class='fas fa-marker'></i></i> APPLY TO REPORT</a>";
             $txt .= "</div'>";
             $txt .= "<div id='displayResult'></div>";
             $txt .= "</div>";

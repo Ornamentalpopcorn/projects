@@ -1,6 +1,6 @@
 <?php
   session_start();
-  header('Access-Control-Allow-Origin: *');
+
   // include('../../../connection.php');
   // if(!isset($_SESSION['authUser'])){
   //   header('Location:../../../logout.php');
@@ -501,34 +501,66 @@ $(document).ready(function(){
       var dataType = $(this).val()
       var action = 'select data'
 
-      // sourceList-main
-
-      $.ajax({
-        type: "POST",
-        url: "includes/controller/productivityController.php",
-        data: {
-          action: action,
-          key: key,
-          datasource: dataType
-        },
-        cache: false,
-        beforeSend: function() {
-          $("#dataType").prop("disabled", true)
-
-          $("#dataList").html('<br><br><center> <div class="col-xs-12 text-center"><button type="button" style="background-color: #ffffff; border-color:#ffffff; margin-top:-25px;" class="btn  btn-lrg ajax" title="Fetching Data"> <i class="fa fa-spinner fa-spin "></i>&nbsp; Loading...</button></div></center>');
-
-        },
-        success: function (data) {
-
-          $("#dataList").html(data)
-          $("#dataType").prop("disabled", false)
-        },
-        error: function(err) {
-        }
-      });
-
+      // $.ajax({
+      //   type: "POST",
+      //   url: "includes/controller/productivityController.php",
+      //   data: {
+      //     action: action,
+      //     key: key,
+      //     datasource: dataType
+      //   },
+      //   cache: false,
+      //   beforeSend: function() {
+      //     $("#dataType").prop("disabled", true)
+      //
+      //     $("#dataList").html('<br><br><center> <div class="col-xs-12 text-center"><button type="button" style="background-color: #ffffff; border-color:#ffffff; margin-top:-25px;" class="btn  btn-lrg ajax" title="Fetching Data"> <i class="fa fa-spinner fa-spin "></i>&nbsp; Loading...</button></div></center>');
+      //
+      //   },
+      //   success: function (data) {
+      //
+      //     $("#dataList").html(data)
+      //     $("#dataType").prop("disabled", false)
+      //   },
+      //   error: function(err) {
+      //   }
+      // });
 
   }) // #dataType end clause
+
+  $(document).on('click', '#sourceList-edit .sourceList', function (e) {
+      var sourceId = $(this).data('id')
+      $("#sourceType").html(sourceId)
+      $("#checkReportChanges").html('')
+
+      var query = $("#queryText-editreport").val()
+      console.log('hehehe')
+      $("#queryText-editreport").val(query + " " + $(this).text() )
+
+      // var action = "edit source"
+      // $.ajax({
+      //   type: "POST",
+      //   url: "includes/controller/productivityController.php",
+      //   data: {
+      //     action: action,
+      //     key: key,
+      //     sourceid: sourceId
+      //   },
+      //   cache: false,
+      //   beforeSend: function() {
+      //
+      //       $("#dataList").html('<br><br><center> <div class="col-xs-12 text-center"><button type="button" style="background-color: #ffffff; border-color:#ffffff; margin-top:-25px;" class="btn  btn-lrg ajax" title="Fetching Data"> <i class="fa fa-spinner fa-spin "></i>&nbsp; Loading...</button></div></center>');
+      //
+      //   },
+      //   success: function (data) {
+      //       $("#dataList").html(data); // creation succefull
+      //   },
+      //   error: function(err) {
+      //   }
+      // });
+
+  })
+
+
 
   $(document).on('click', '#reportOutput-btn', function (e) {
 
@@ -646,7 +678,7 @@ $(document).ready(function(){
 
   // NOTE::*********************************ADDED IN STEP 3
   // NOTE::*********************************ADDED IN STEP 3
-  $(document).on('click', '.sourceList', function (e) {
+  $(document).on('click', '#sourceList-main .sourceList', function (e) {
       var sourceId = $(this).data('id')
       $("#sourceType").html(sourceId)
       $("#checkReportChanges").html('')
@@ -675,8 +707,6 @@ $(document).ready(function(){
       });
 
   })
-
-
 
 
   $(document).on('click', '#addNewSource', function (e) {
@@ -771,52 +801,59 @@ $(document).ready(function(){
 
   $(document).on('click', '#data-apply', function (e) {
         var sourceType = $("#sourceType").text()
-        var sql = $("#queryText").val()
+        var sql = $("#queryText-editreport").val().trim()
 
-        if ($("#data-title").val().trim() && $("#queryText").val().trim() ) {
+        if (sql) {
 
-                $("#data-apply").attr("disabled", true)
-                var action = "apply to report"
-                $.ajax({
-                  type: "POST",
-                  url: "includes/controller/productivityController.php",
-                  data: {
-                    action: action,
-                    key: key,
-                    sourcetype: sourceType,
-                    sql: sql
-                  },
-                  cache: false,
-                  beforeSend: function() {
+            if (confirm('Apply To Report ?') ) {
 
-                      $("#checkReportChanges").html('<br><br><center> <div class="col-xs-12 text-center"><button type="button" style="background-color: #ffffff; border-color:#ffffff; margin-top:-25px;" class="btn  btn-lrg ajax" title="Fetching Data"> <i class="fa fa-spinner fa-spin "></i>&nbsp; Loading...</button></div></center>')
-                  },
-                  success: function (data) {
-                      $("#data-apply").attr("disabled", false)
+              $("#data-apply").attr("disabled", true)
+              var action = "apply to report"
+              $.ajax({
+                type: "POST",
+                url: "includes/controller/productivityController.php",
+                data: {
+                  action: action,
+                  key: key,
+                  sourcetype: sourceType,
+                  sql: sql
+                },
+                cache: false,
+                beforeSend: function() {
 
+                  $("#reportResultInfo").html('<br><br><center> <div class="col-xs-12 text-center"><button type="button" style="background-color: #ffffff; border-color:#ffffff; margin-top:-25px;" class="btn  btn-lrg ajax" title="Fetching Data"> <i class="fa fa-spinner fa-spin "></i>&nbsp; Loading...</button></div></center>')
+                  $("#reportResultInfo").fadeIn()
+                  $("#applyToReportResult").html('')
+                },
+                success: function (data) {
+                  $("#data-apply").attr("disabled", false)
 
-                      $("#displayResult").fadeIn()
-                      // $("#displayResult").html(data)
-                      setTimeout(function() {
-                        $("#displayResult").fadeOut()
-                      } , 5000);
+                  $("#reportResultInfo").html(data)
+                  setTimeout(function() {
+                    $("#reportResultInfo").fadeOut()
+                  } , 5000);
 
-                      if (data == 1) {
-                          alert('Successfully applied changes to report!')
-                          $("#checkReportChanges").html("<br><br> &gt; <u><a target='_blank' href='https://www.bellkenz.com/dev-smpp/auth_directory/dir_productivity/productivity_report.php'>VIEW APPLIED CHANGES</a></u>")
-                      }
+                  if (data == 1) {
 
-                  },
-                  error: function(err) {
+                    alert('Successfully applied changes to report!')
+                    $("#applyToReportResult").html("<br><br> &gt; <u><a target='_blank' href='https://www.bellkenz.com/dev-smpp/auth_directory/dir_productivity/productivity_report.php'>VIEW APPLIED CHANGES</a></u>")
                   }
-                });
+
+                },
+                error: function(err) {
+                }
+              });
+
+            } // if apply to report
+
 
         } else {
                 alert('Complete Missing Field!')
         }
 
-
   })
+
+
 
 }); // document ready function
 
