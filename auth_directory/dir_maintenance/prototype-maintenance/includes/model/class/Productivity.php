@@ -618,7 +618,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                                 $stmt_insert->bindValue(":is_checked" , "1", PDO::PARAM_STR);
                                 $stmt_insert->bindValue(":is_source" , "2", PDO::PARAM_STR);
                                 $stmt_insert->execute();
-
+dsadsadsa
 
                                 $sql = "INSERT INTO  productivity_computed_report_specific
                                 (
