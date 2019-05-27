@@ -585,7 +585,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                               }
                             }
                           }
- 
+
 
                           // FETCH AMOUNT FROM QUERY
                           // FETCH AMOUNT FROM QUERY
