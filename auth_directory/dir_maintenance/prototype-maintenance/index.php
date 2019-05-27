@@ -6,15 +6,15 @@
   //   header('Location:../../../logout.php');
   // }
 
-  // $server = 'localhost';
-  // $username = 'root';
-  // $password = '';
-  // $dbname = 'dev_smpp';
-
   $server = 'localhost';
-  $username = 'epasadil_admin';
-  $password = 'Pr0+0c01$';
-  $dbname = 'epasadil_dev-smpp-db';
+  $username = 'root';
+  $password = '';
+  $dbname = 'dev_smpp';
+
+  // $server = 'localhost';
+  // $username = 'epasadil_admin';
+  // $password = 'Pr0+0c01$';
+  // $dbname = 'epasadil_dev-smpp-db';
 
   $charset = 'utf8';
   $options = array(
@@ -828,7 +828,7 @@ $(document).ready(function(){
                 success: function (data) {
                     $("#data-apply").attr("disabled", false)
 
-                    $("#reportResultInfo").html(data) 
+                    $("#reportResultInfo").html(data)
                     if (data == 1) {
                       $("#reportResultInfo").html('<br><center><div class="alert alert-success" role="alert">Sucessfully Applied To Report</div></center>')
                       alert('Successfully applied changes to report!')
@@ -836,7 +836,7 @@ $(document).ready(function(){
                     }
 
                     setTimeout(function() {
-                      $("#reportResultInfo").fadeOut()
+                      // $("#reportResultInfo").fadeOut()
                     } , 5000);
 
                 },
