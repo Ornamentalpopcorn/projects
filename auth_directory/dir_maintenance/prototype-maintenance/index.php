@@ -826,18 +826,18 @@ $(document).ready(function(){
                   $("#applyToReportResult").html('')
                 },
                 success: function (data) {
-                  $("#data-apply").attr("disabled", false)
+                    $("#data-apply").attr("disabled", false)
 
-                  $("#reportResultInfo").html(data)
-                  setTimeout(function() {
-                    $("#reportResultInfo").fadeOut()
-                  } , 5000);
+                    $("#reportResultInfo").html(data) 
+                    if (data == 1) {
+                      $("#reportResultInfo").html('<br><center><div class="alert alert-success" role="alert">Sucessfully Applied To Report</div></center>')
+                      alert('Successfully applied changes to report!')
+                      $("#applyToReportResult").html("<br><br> &gt; <u><a target='_blank' href='https://www.bellkenz.com/dev-smpp/auth_directory/dir_productivity/productivity_report.php'>VIEW APPLIED CHANGES</a></u>")
+                    }
 
-                  if (data == 1) {
-
-                    alert('Successfully applied changes to report!')
-                    $("#applyToReportResult").html("<br><br> &gt; <u><a target='_blank' href='https://www.bellkenz.com/dev-smpp/auth_directory/dir_productivity/productivity_report.php'>VIEW APPLIED CHANGES</a></u>")
-                  }
+                    setTimeout(function() {
+                      $("#reportResultInfo").fadeOut()
+                    } , 5000);
 
                 },
                 error: function(err) {
