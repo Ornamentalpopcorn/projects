@@ -104,7 +104,7 @@
 
                  $data = array("dispensing", "tagged", "senior", "non-senior", "other actual", "other no-actual");
 
-
+                 $source_list = "";
                  $source_list .= "<ul class='list-group list-group-flush list-group-item-action' id='editSourceList' style='margin-top:1vh'>";
                  $source_list .="<li class='list-group-item' style='background-color: #3c8aea; color: white'>REPORT COMPUTATIONS</li>";
                  foreach ($data as $row) {

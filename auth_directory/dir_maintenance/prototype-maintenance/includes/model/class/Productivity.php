@@ -526,32 +526,57 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
   public function applyToReport()
   {
     global $conn_pdo;
-
+    try {
 
         $c = 1; $pseudo_syntax = array();
         foreach (explode("::", $this->source) as $source_sql) {
               $source_sql = trim($source_sql);
 
-              if ($source_sql[0] == "x" || $source_sql[0] == "*" || $source_sql[0] == "/" || $source_sql[0] == "+" || $source_sql[0] == "-  ") {
+              if ($source_sql[0] == "x" || $source_sql[0] == "*" || $source_sql[0] == "/" || $source_sql[0] == "+" || $source_sql[0] == "-") {
                 $operator = $source_sql[0];
               }
 
-              if ($source_sql[0] == "x") {     $query_list[] = ltrim($source_sql, "x");
-              } elseif ($source_sql[0] == "+") $query_list[] = ltrim($source_sql, "+");
-              } elseif ($source_sql[0] == "*") $query_list[] = ltrim($source_sql, "*");
-              } elseif ($source_sql[0] == "-") $query_list[] = ltrim($source_sql, "-");
-              } elseif ($source_sql[0] == "/") $query_list[] = ltrim($source_sql, "/");
-              } else $operator = "";
+              // echo $source_sql;
+
+              if ($source_sql[0] == "x")     $query_list[] = ltrim($source_sql, "x");
+              elseif ($source_sql[0] == "+") $query_list[] = ltrim($source_sql, "+");
+              elseif ($source_sql[0] == "*") $query_list[] = ltrim($source_sql, "*");
+              elseif ($source_sql[0] == "-") $query_list[] = ltrim($source_sql, "-");
+              elseif ($source_sql[0] == "/") $query_list[] = ltrim($source_sql, "/");
+              else {
+                $query_list[] = $source_sql;
+                $operator = "";
+
+              }
 
               if ($c == 1) {
                      $pseudo_syntax[] = "query" . $c++ . " " . $operator;
               } else $pseudo_syntax[] = $operator . " query" . $c++ ;
-              $operator_list[] = $operator;
+
+              if ($operator) {
+                $operator_list[] = $operator;
+              }
         }
-        echo  $query_list[0];
-        echo "<br><br>";
-        echo  $query_list[1];
-        echo "<br><br>";
+        // echo  $query_list[0];
+        // echo "<br><br>";
+        // echo  $query_list[1];
+        // echo "<br><br>";
+        $c = 0;
+        foreach ($query_list as $query) {
+
+          if (array_key_exists($c, $operator_list)) {
+                 $operator = $operator_list[$c];
+          } else $operator = "";
+
+          if ($c == 0) {
+                 echo $query . " " . $operator;
+          } else echo $operator . " " . $query;
+          $c++;
+        }
+        // echo print_r($operator_list);
+        // echo print_r($query_list);
+
+        return 'end';
 
         $full_query = $this->source;
 
@@ -809,9 +834,6 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                 }
 
           } else return "<br><br><center style='color: red;'><b>INVALID QUERY ENTERED! PLEASE CHECK SYNTAX!</b></center>";
-
-
-
 
     } catch (PDOException $e) {
         throw new Exception("Connection failed: ". $e->getMessage());

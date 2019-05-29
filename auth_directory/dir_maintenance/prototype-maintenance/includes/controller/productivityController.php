@@ -3,18 +3,7 @@
   // include('../../../../../connection.php');
   header('Access-Control-Allow-Origin: *');
   session_start();
-<<<<<<< HEAD
-  $server = 'localhost';
-  $username = 'root';
-  $password = '';
-  $dbname = 'dev_smpp';
-
-  // $server = 'localhost';
-  // $username = 'epasadil_admin';
-  // $password = 'Pr0+0c01$';
-  // $dbname = 'epasadil_dev-smpp-db';
-=======
-
+ 
   $url = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
   if (strpos($url, "localhost") !== FALSE) {
 
@@ -29,7 +18,7 @@
     $dbname = 'epasadil_dev-smpp-db';
 
   }
->>>>>>> step_3
+
 
   $charset = 'utf8';
   $options = array(

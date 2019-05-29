@@ -6,16 +6,8 @@
   //   header('Location:../../../logout.php');
   // }
 
- 
-  $server = 'localhost';
-  $username = 'root';
-  $password = '';
-  $dbname = 'dev_smpp';
 
-  // $server = 'localhost';
-  // $username = 'epasadil_admin';
-  // $password = 'Pr0+0c01$';
-  // $dbname = 'epasadil_dev-smpp-db';
+
 
   $url = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
   if (strpos($url, "localhost") !== FALSE) {
@@ -70,8 +62,8 @@
   if (file_exists($_SESSION['auth_usercode']. ".txt") ) unlink($_SESSION['auth_usercode']. ".txt");
 
   // echo $actual_link = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
-  $result = $stringCalc->calculate("(2+1) - (5-1.3)");
-
+  $result = $stringCalc->calculate("(2-1)*5");
+ 
 ?>
 <!DOCTYPE html>
 <html>
