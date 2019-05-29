@@ -6,7 +6,7 @@
   //   header('Location:../../../logout.php');
   // }
 
-<<<<<<< HEAD
+ 
   $server = 'localhost';
   $username = 'root';
   $password = '';
@@ -16,7 +16,7 @@
   // $username = 'epasadil_admin';
   // $password = 'Pr0+0c01$';
   // $dbname = 'epasadil_dev-smpp-db';
-=======
+
   $url = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
   if (strpos($url, "localhost") !== FALSE) {
 
@@ -32,7 +32,7 @@
 
   }
 
->>>>>>> step_3
+
 
   $charset = 'utf8';
   $options = array(

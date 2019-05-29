@@ -526,8 +526,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
   public function applyToReport()
   {
     global $conn_pdo;
-    try {
-<<<<<<< HEAD
+
 
         $c = 1; $pseudo_syntax = array();
         foreach (explode("::", $this->source) as $source_sql) {
@@ -554,10 +553,8 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
         echo  $query_list[1];
         echo "<br><br>";
 
-
-=======
         $full_query = $this->source;
->>>>>>> step_3
+
         $sql = "SELECT source_id, full_query
         FROM reference_source_list
         WHERE 1=1
@@ -573,8 +570,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
              $this->source = $row['full_query'];
           } // foreach row
 
-<<<<<<< HEAD
-=======
+
         }
 
           $check_syntax = $this->checkQuerySyntax($this->source, $this->source);
@@ -813,7 +809,6 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                 }
 
           } else return "<br><br><center style='color: red;'><b>INVALID QUERY ENTERED! PLEASE CHECK SYNTAX!</b></center>";
->>>>>>> step_3
 
 
 
