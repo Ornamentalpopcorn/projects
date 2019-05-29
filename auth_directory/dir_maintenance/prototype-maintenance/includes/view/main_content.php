@@ -16,13 +16,6 @@
 
               <div id="m1" class="tab-pane fade in active">
                 <br>
-                <div class="row">
-                  <div class="col-md-6">
-
-                      <input  style="width: 500px !important; margin-left: 17px;" class="form-control js-states" id="referenceSources" >
-                  </div>
-                </div>
-                <br>
 
                 <div class="col-md-4">
 
@@ -30,7 +23,7 @@
 
                     <center>
                     <a href="#"
-                    id="addNewSource" class="btn btn-primary btn btn-xs" style="margin-bottom:3px"><i class="fas fa-plus"></i> ADD DATA SOURCE</a>
+                    id="addNewSource" class="btn btn-block btn-primary btn" style="margin-bottom:3px; "><i class="fas fa-plus"></i> ADD DATA SOURCE</a>
                     </center>
 
 
@@ -42,6 +35,12 @@
                     ?>
 
                   </div>
+                  <br>
+                  <br>
+                  <br>
+                  <br>
+                        <input  style="width: 50vh !important; margin-top: 5px;" class="form-control js-states" id="referenceSources" >
+
 
                 </div>
 
@@ -75,6 +74,10 @@
 
                     ?>
                   </div>
+
+
+
+
                 </div>
                 <div id="sourceType" style="display:none">new</div>
                 <div id="checkReportChanges"></div>
@@ -85,9 +88,8 @@
 
               <div id="m2" class="tab-pane fade">
 
-                <div class="col-md-12">
-                  <br>
-                  <label for="">Sales Report</label>
+                <div class="col-md-3">
+                  <!-- <label for="">Sales Report</label>
                   <select class="form-control" id="dataType" style="margin-bottom: 5px;">
                     <option disabled selected>Select Report Computation...</option>
                     <option value="dispensing">Dispensing Sales</option>
@@ -96,33 +98,55 @@
                     <option value="non-senior">MDC Non-Senior Citizen Sales</option>
                     <option value="other area with actual">Other Area Sales W/ Actual Data</option>
                     <option value="other area without actual">Other Area Sales W/O Actual Data</option>
-                 </select>
-                 <hr>
+                 </select> -->
+
+                 <?Php
+
+                 $data = array("dispensing", "tagged", "senior", "non-senior", "other actual", "other no-actual");
+
+
+                 $source_list .= "<ul class='list-group list-group-flush list-group-item-action' id='editSourceList' style='margin-top:1vh'>";
+                 $source_list .="<li class='list-group-item' style='background-color: #3c8aea; color: white'>REPORT COMPUTATIONS</li>";
+                 foreach ($data as $row) {
+                    $source_list .= '<li class="list-group-item"><i class="fas fa-angle-right"></i> ' . strtoupper($row) . '<small class="pull-right"><a href="#" data-id="' . ucfirst($row) . '">EDIT</small></a></li>';
+
+                 }
+                 $source_list .= "</ul>";
+
+                 echo $source_list;
+                 ?>
+
                 </div>
+                <div id="editContent" style="display:none;">
 
-                <div class="col-md-4">
+                  <div id="editSourceToApply"></div>
 
-                  <div id="sourceList-edit" style="max-height:60vh; overflow-y:auto;">
 
-                    <?Php
+                  <div class="col-md-3">
 
-                    $sourceList = $productivity_class->displaySourceList();
-                    echo $sourceList;
+                    <div id="sourceList-edit" style="max-height:60vh; overflow-y:auto;">
+                      <br>
+                      <?Php
 
-                    ?>
+                      $sourceList = $productivity_class->displaySourceList();
+                      echo $sourceList;
+
+                      ?>
+
+                    </div>
 
                   </div>
 
-                </div>
-
-                <div class="col-md-8">
-                    <textarea id='queryText-editreport' style="margin-top: 0px;" placeholder='Select SUM(amount), md_code FROM source_table' name='queryText' class='form-control' rows='6' cols='120'></textarea>
+                  <div class="col-md-6">
+                    <br>
+                    <textarea id='queryText-editreport' style="margin-top: 0px;" placeholder='Type Data Source Name/Query Here...' name='queryText' class='form-control' rows='6' cols='120'></textarea>
                     <a href='#' id='data-apply' class='btn btn-primary btn btn-xs' style='margin:3px; float:right;'><i class='fas fa-marker'></i></i> APPLY TO REPORT</a>
 
                     <div id="reportResultInfo"></div>
                     <div id="applyToReportResult"></div>
 
-                </div>
+                  </div>
+                </div> <!-- editContent end div -->
 
               </div> <!-- DIV id M2 -->
 

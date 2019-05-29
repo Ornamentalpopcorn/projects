@@ -277,6 +277,26 @@ trait ProductivityCommand
 
   // NOTE:*******************************************************************************************************STEP 3
   // NOTE:*******************************************************************************************************STEP 3
+  public function getSalesSource()
+  {
+    global $conn_pdo;
+    try {
+      $query = "";
+      $sql = "SELECT query
+      FROM  reference_sales_step_list
+      WHERE sale_type = '$this->source_type'
+      ";
+      $data = $this->querySelect($sql);
+      foreach ($data as $row) {
+         $query = $row['query'];
+      }
+      return $query;
+
+    } catch (PDOException $e) {
+        throw new Exception("Connection failed: ". $e->getMessage());
+    }
+  }
+
   public function displaySourceInfo()
   {
     global $conn_pdo;
@@ -295,7 +315,7 @@ trait ProductivityCommand
       $txt = "<br>";
       $txt .= "<h3>EDIT DATA SOURCE</h3>";
       $txt .= '<input type="text" id="data-title" class="form-control" name="source-name" value="' . $title . '" required="required" placeholder="Source Title">';
-      $txt .= "<textarea id='queryText' placeholder='Select SUM(amount), md_code FROM source_table' name='queryText' class='form-control' rows='6' cols='120'>$sql</textarea>";
+      $txt .= "<textarea id='queryText' placeholder='Type Query Text Here..' name='queryText' class='form-control' rows='6' cols='120'>$sql</textarea>";
 
 
       $txt .= "<div class='clearfix'></div>";
@@ -626,6 +646,7 @@ trait ProductivityCommand
         if ($data) {
 
           $source_list .= "<ul class='list-group list-group-flush list-group-item-action'>";
+          $source_list .="<li class='list-group-item' style='background-color: #3c8aea; color: white'>DATA SOURCE LIST</li>";
           foreach ($data as $row) {
              $source_list .= '<li class="list-group-item">
              <a href="#" class="sourceList" style="text-decoration:none"
