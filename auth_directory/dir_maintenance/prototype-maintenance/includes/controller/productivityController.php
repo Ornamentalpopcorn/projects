@@ -3,6 +3,7 @@
   // include('../../../../../connection.php');
   header('Access-Control-Allow-Origin: *');
   session_start();
+<<<<<<< HEAD
   $server = 'localhost';
   $username = 'root';
   $password = '';
@@ -12,6 +13,23 @@
   // $username = 'epasadil_admin';
   // $password = 'Pr0+0c01$';
   // $dbname = 'epasadil_dev-smpp-db';
+=======
+
+  $url = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+  if (strpos($url, "localhost") !== FALSE) {
+
+    $server = 'localhost';
+    $username = 'root';
+    $password = '';
+    $dbname = 'dev_smpp';
+  } else {
+    $server = 'localhost';
+    $username = 'epasadil_admin';
+    $password = 'Pr0+0c01$';
+    $dbname = 'epasadil_dev-smpp-db';
+
+  }
+>>>>>>> step_3
 
   $charset = 'utf8';
   $options = array(
@@ -94,7 +112,7 @@ if (isset($_POST['key'])) {
 
             } elseif ($_POST['action'] == "display value") {
                   $obj = new Productivity();
-                  $result = $obj->displayResult($_POST['datatype'], $_POST['md'], $_POST['month'], $_POST['query'] );
+                  $result = $obj->displayResult($_POST['md'], $_POST['month'], $_POST['query'] );
 
             } elseif ($_POST['action'] == "apply changes to productivity") {
                   $obj = new Productivity();
@@ -121,6 +139,10 @@ if (isset($_POST['key'])) {
                   $obj->source = $_POST['sql'];
                   $result = $obj->applyToReport();
 
+            } elseif ($_POST['action'] == "edit sales source") {
+                  $obj = new Productivity();
+                  $obj->source_type = $_POST['sourcetype'];
+                  $result = $obj->getSalesSource();
             }
 
     } else {

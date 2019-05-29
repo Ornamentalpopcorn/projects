@@ -28,6 +28,8 @@ interface ProductivityCommandInterface
 
     public function saveSource();
     public function displaySourceInfo();
+    
+    public function getSalesSource();
 
 
 

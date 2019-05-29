@@ -346,7 +346,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
   }
 
 
-  public function displayResult($data_type, $md_code, $month, $sql)
+  public function displayResult($md_code, $month, $sql)
   {
   global $conn_pdo;
       try {
@@ -431,71 +431,84 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
         }
 
         $check_syntax = $this->checkQuerySyntax($sql, $sql)  ;
-        // $check_syntax = $this->checkQuerySyntax($sql, $sql)  ;
 
         if ($check_syntax == 1 ) {
           $stmt = $conn_pdo->prepare($sql);
           $stmt->execute();
           $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+
+
           foreach ($data as $key => $row) {
+
             foreach ($row as $key2 => $value) {
 
-              if (strpos($key2, "amount") !== FALSE || strpos($key2, "AMOUNT") !== FALSE) {
-                     $amount = $value;
-                     $txt .= strtoupper(str_replace("_", " ", $key2) ) . ": <u>" . number_format($value,2) . "</u><br>";
-              } else $txt .= strtoupper(str_replace("_", " ", $key2) ) . ": <u>" . $value . "</u><br>";
+                // if (strpos($key2, "amount") !== FALSE || strpos($key2, "AMOUNT") !== FALSE) {
+                       // $amount = $value;
+                       // $txt .= strtoupper(str_replace("_", " ", $key2) ) . ": <u>" . number_format($value,2) . "</u><br>";
+                // } else $txt .= strtoupper(str_replace("_", " ", $key2) ) . ": <u>" . $value . "</u><br>";
 
-              $key_list[] = $key2;
+                $key_values[$key2][] = $value;
+
+                $key_list[] = $key2;
             }
-            $txt .= "<hr>";
+            // $txt .= "<hr>";
           }
-          $txt .= "<br><br><b>QUERY CREATED:</b> <i>$sql</i>";
+
+          if ($key_list) {
+
+                  $txt .= "<table border='1' class='table table-striped table-hover display' id='dataTable' style='text-align:center; table-layout:auto;' width='100%' >";
+                  $key_list = array_unique($key_list);
+                  $txt .= '<thead style="text-align:center !important; border: 1px solid #FFF;padding:4px;color:#2779aa">';
+                  foreach ($key_list as $list) {
+                    $txt .= "<th style='background-color: #3c8aea; color: white';>" . strtoupper(str_replace("_", " ", $list)) . "</th>";
+                  } // fe
+                  $txt .= "</thead>";
+
+                  $txt .= "<tbody>";
+                  $txt_array = array();
+                  for ($i=0; $i <= count($key_values[$list]) ; $i++) {
+                    $txt .= "<tr>";
+                    $c = 0;
+                    $td_text = "";
+                    foreach ($key_list as $list) {
+
+                        if (strpos($list, "amount") !== FALSE || strpos($list, "AMOUNT") !== FALSE) {
+                                $td_text .= "<td>" . number_format($key_values[$list][$i],2) . "</td>";
+                        } else  $td_text .= "<td>" . $key_values[$list][$i] . "</td>";
+
+                        if (strpos($key_values[$list][$i], "2018-") !== FALSE) $c++;
+
+                    } // fe
+                    if ($c >= 1) {
+                       $txt .= $td_text;
+                    }
+                    $txt .= "</tr>";
+                  }
+                  $txt .= "</tbody>";
+                  $txt .= "</table>";
+          } else  $txt .= "<span style='color:red'><b><center>NO RESULT TO DISPLAY!<br><small>MAKE SURE TO INCLUDED CREDITING DATE IN QUERY</small></b></center></span>";
+
+          // foreach ($data as $key => $row) {
+          //
+          //   foreach ($row as $key2 => $value) {
+          //
+          //     if (strpos($key2, "amount") !== FALSE || strpos($key2, "AMOUNT") !== FALSE) {
+          //            $amount = $value;
+          //            $txt .= strtoupper(str_replace("_", " ", $key2) ) . ": <u>" . number_format($value,2) . "</u><br>";
+          //     } else $txt .= strtoupper(str_replace("_", " ", $key2) ) . ": <u>" . $value . "</u><br>";
+          //
+          //     $key_list[] = $key2;
+          //   }
+          //   $txt .= "<hr>";
+          // }
+
+
+          $txt .= "<br><br><b>QUERY CREATED:</b> <pre>$sql</pre>";
           $txt .= "<div class='clearfix'></div>";
 
           return $txt;
 
-          // $txt .= "<hr>";
-          //
-          //   $txt .= "<div class='row'>";
-          //
-          //     $txt .= "<div class='col-md-6'>";
-          //
-          //     if ($md_code && $date) {
-          //
-          //         if ($data_type == "dispensing") { $sale_type = " AND sale_type = 'DISPENSING' ";
-          //         } elseif ($data_type == "tagged") { $sale_type = " AND sale_type = 'TAGGED ACCOUNT' ";
-          //         } elseif ($data_type == "senior") { $sale_type = " AND sale_type IN ('ON-SITE','OFF-SITE') AND sale_specific_type IN ('SENIOR') ";
-          //         } elseif ($data_type == "non-senior") { $sale_type = " AND sale_type IN ('ON-SITE','OFF-SITE') AND sale_specific_type IN ('NON-SENIOR') ";
-          //         } elseif ($data_type == "other area with actual") { $sale_type = " AND sale_type = 'OTHER AREA ACTUAL' ";
-          //         } elseif ($data_type == "other area without actual") { $sale_type = " AND sale_type = 'OTHER AREA NO ACTUAL' ";
-          //         }
-          //
-          //         $sql = "SELECT SUM(TOTAL_AMOUNT) as amt
-          //         FROM productivity_computed_report_specific
-          //         WHERE 1=1
-          //             AND md_code = '$md_code'
-          //             AND is_checked = 1
-          //             $date_sql
-          //             $sale_type
-          //         ";
-          //         $data = $this->querySelect($sql);
-          //         if ($data) {
-          //           foreach ($data as $row) {
-          //               $txt .= "DATE TO BE AFFECTED : <u>" . $date . "</u>";
-          //               $txt .= "<br>";
-          //               $txt .= "CURRENT SALES AMOUNT: <u>" . number_format($row['amt'],2 ) . "</u>";
-          //               $current_value = $row['amt'];
-          //           }
-          //         }
-          //     }
-          //     $txt .="</div>";
-          //     $txt .= "<center><a href='#' data-type ='$data_type' data-amount='$amount' data-mdcode='$md_code' data-date='$date' id='reportOutput-btn' class='pull-right btn btn-success'><i class='fa fa-plus'></i> APPLY TO REPORT</a></center>";
-          //   $txt .="</div>"; //  div class row end
-          //   $txt .="<br><br><br>";
-          //   $txt .= "<div id='resulttest'></div> ";
-          //
-          // return $txt;
         } else {
           return "<br><br><center style='color: red;'><b>INVALID QUERY ENTERED! PLEASE CHECK SYNTAX!</b></center>";
         }
@@ -514,6 +527,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
   {
     global $conn_pdo;
     try {
+<<<<<<< HEAD
 
         $c = 1; $pseudo_syntax = array();
         foreach (explode("::", $this->source) as $source_sql) {
@@ -541,6 +555,9 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
         echo "<br><br>";
 
 
+=======
+        $full_query = $this->source;
+>>>>>>> step_3
         $sql = "SELECT source_id, full_query
         FROM reference_source_list
         WHERE 1=1
@@ -556,8 +573,249 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
              $this->source = $row['full_query'];
           } // foreach row
 
+<<<<<<< HEAD
+=======
+        }
 
-        } else return 0; // IF DATA
+          $check_syntax = $this->checkQuerySyntax($this->source, $this->source);
+          if ($check_syntax == 1) { // syntax is correct
+                $source_sql = "";
+                $filter_sql = explode("GROUP BY", $this->source);
+                $source_sql = $filter_sql[0];
+
+                if (strpos($this->source_type, "Senior") !== FALSE) {
+                  $sale_type = " AND sale_type IN ('ON-SITE','OFF-SITE') AND sale_specific_type IN ('SENIOR') ";
+                  $other_type = " AND sale_type IN ('ON-SITE','OFF-SITE') ";
+                  $type = "ON-SITE";
+                  $specific_type = "SENIOR";
+                } elseif (strpos($this->source_type, "Dispensing") !== FALSE) {
+                  $sale_type = " AND sale_type = 'DISPENSING' ";
+                  $type = "DISPENSING";
+                  $other_type = "";
+                  $specific_type = "";
+                }
+
+
+                if (strpos($source_sql, "AMOUNT") !== FALSE || strpos($source_sql, "amount") !== FALSE) {
+
+                  $sql = "SELECT DISTINCT md_code
+                  FROM md_profile_list_by_class as b
+                  WHERE 1=1
+                        AND status IN ('JEDI','IPG','PADAWAN')
+                        -- AND md_code = 'D-16-002031'
+                  LIMIT 50
+                  ";
+                  $data = $this->querySelect($sql);
+
+                  foreach ($data as $row) {
+                      $md_code = $row['md_code'];
+
+                      $md_list[] = "'$md_code'";
+                      for ($i=1; $i <= 12 ; $i++) {
+
+                          if ($i <= 9) {
+                                 $date = "2018-0" . $i . "-01";
+                          } else $date = "2018-$i-01";
+
+                          if (strpos($source_sql, "WHERE") !== FALSE) {
+                                 $d_sql = $source_sql . " AND md_code = '$md_code' AND crediting_date = '$date' ";
+                          } else $d_sql = $source_sql . " WHERE 1=1 AND md_code = '$md_code' AND crediting_date = '$date' ";
+
+
+                          // FETCH AMOUNT FROM QUERY
+                          // FETCH AMOUNT FROM QUERY
+                          $amount = 0;
+                          $stmt = $conn_pdo->prepare($d_sql);
+                          $stmt->execute();
+                          $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                          foreach ($data as $key => $row) {
+                            foreach ($row as $key2 => $value) {
+
+                              if (strpos($key2, "amount") !== FALSE || strpos($key2, "AMOUNT") !== FALSE) {
+                                     $amount = $value;
+                              }
+                            }
+                          }
+
+                          // FETCH AMOUNT FROM QUERY
+                          // FETCH AMOUNT FROM QUERY
+
+                                $sql = "INSERT INTO  productivity_computed_report
+                                (
+                                    md_code,
+                                    crediting_date,
+                                    sale_type,
+                                    total_amount,
+                                    is_checked,
+                                    is_source
+                                )
+                                VALUES
+                                (
+                                    :md_code,
+                                    :crediting_date,
+                                    :sale_type,
+                                    :total_amount,
+                                    :is_checked,
+                                    :is_source
+                                )
+                                ";
+                                $stmt_insert = $conn_pdo->prepare($sql);
+
+                                $stmt_insert->bindValue(":md_code" , $md_code, PDO::PARAM_STR);
+                                $stmt_insert->bindValue(":crediting_date" , $date, PDO::PARAM_STR);
+                                $stmt_insert->bindValue(":sale_type" , $type, PDO::PARAM_STR);
+                                $stmt_insert->bindValue(":total_amount" , $amount, PDO::PARAM_STR);
+                                $stmt_insert->bindValue(":is_checked" , "1", PDO::PARAM_STR);
+                                $stmt_insert->bindValue(":is_source" , "2", PDO::PARAM_STR);
+                                $stmt_insert->execute();
+
+
+                                $sql = "INSERT INTO  productivity_computed_report_specific
+                                (
+                                    md_code,
+                                    crediting_date,
+                                    sale_type,
+                                    sale_specific_type,
+                                    total_amount,
+                                    is_checked,
+                                    is_source
+                                )
+                                VALUES
+                                (
+                                    :md_code,
+                                    :crediting_date,
+                                    :sale_type,
+                                    :sale_specific_type,
+                                    :total_amount,
+                                    :is_checked,
+                                    :is_source
+                                )
+                                ";
+                                $stmt_insert = $conn_pdo->prepare($sql);
+
+                                $stmt_insert->bindValue(":md_code" , $md_code, PDO::PARAM_STR);
+                                $stmt_insert->bindValue(":crediting_date" , $date, PDO::PARAM_STR);
+                                $stmt_insert->bindValue(":sale_type" , $type, PDO::PARAM_STR);
+                                $stmt_insert->bindValue(":sale_specific_type" , $specific_type, PDO::PARAM_STR);
+                                $stmt_insert->bindValue(":total_amount" , $amount, PDO::PARAM_STR);
+                                $stmt_insert->bindValue(":is_checked" , "1", PDO::PARAM_STR);
+                                $stmt_insert->bindValue(":is_source" , "2", PDO::PARAM_STR);
+                                $stmt_insert->execute();
+                      } // for i
+
+
+                  } // foreach data
+
+                  $date = '2018';
+                  $sql = "DELETE FROM productivity_computed_report
+                  WHERE 1=1
+                        AND md_code IN (" . implode(',', $md_list) . ")
+                        AND YEAR(crediting_date) = '$date'
+                        AND is_checked = 1
+                        AND is_source = 1
+                        $other_type
+                        ";
+                  $stmt = $conn_pdo->prepare($sql);
+                  $stmt->execute();
+
+                  $sql = "UPDATE productivity_computed_report
+                  SET  is_checked = 0
+                  WHERE 1=1
+                        AND md_code IN (" . implode(',', $md_list) . ")
+                        AND YEAR(crediting_date) = '$date'
+                        AND is_checked = 1
+                        AND is_source = 0
+                        $other_type
+                  ";
+                  $stmt = $conn_pdo->prepare($sql);
+                  $stmt->execute();
+
+                  $sql = "DELETE FROM productivity_computed_report_specific
+                  WHERE 1=1
+                        AND md_code IN (" . implode(',', $md_list) . ")
+                        AND YEAR(crediting_date) = '$date'
+                        AND is_checked = 1
+                        AND is_source = 1
+                        $sale_type
+                  ";
+                  $stmt = $conn_pdo->prepare($sql);
+                  $stmt->execute();
+
+                  $sql = "UPDATE productivity_computed_report_specific
+                  SET is_checked = 0
+                  WHERE 1=1
+                      AND md_code IN (" . implode(',', $md_list) . ")
+                      AND YEAR(crediting_date) = '$date'
+                      AND is_checked = 1
+                      AND is_source = 0
+                      $sale_type
+                  ";
+                  $stmt = $conn_pdo->prepare($sql);
+                  $stmt->execute();
+
+                  // UPDATE SOURCEC TO 1
+                  $sql = "UPDATE productivity_computed_report_specific
+                  SET is_source = 1
+                  WHERE 1=1
+                      AND md_code IN (" . implode(',', $md_list) . ")
+                      AND YEAR(crediting_date) = '$date'
+                      AND is_source = 2
+                      $sale_type
+                  ";
+                  $stmt = $conn_pdo->prepare($sql);
+                  $stmt->execute();
+
+                  $sql = "UPDATE productivity_computed_report
+                  SET is_source = 1
+                  WHERE 1=1
+                        AND md_code IN (" . implode(',', $md_list) . ")
+                        AND YEAR(crediting_date) = '$date'
+                        AND is_checked = 1
+                        AND is_source = 2
+                        $other_type
+                  ";
+                  $stmt = $conn_pdo->prepare($sql);
+                  $stmt->execute();
+
+                  // INSERT REFERENCE SALES STEP LIST
+
+                  $sql = "DELETE FROM reference_sales_step_list
+                  WHERE 1=1
+                        AND sale_type = '$this->source_type'
+                  ";
+                  $stmt = $conn_pdo->prepare($sql);
+                  $stmt->execute();
+
+                  $sql = "INSERT INTO reference_sales_step_list
+                  (
+                      sale_type,
+                      step,
+                      query
+                  )
+                  VALUES
+                  (
+                      :sale_type,
+                      :step,
+                      :query
+
+                  )
+                  ";
+                  $stmt_insert = $conn_pdo->prepare($sql);
+
+                  $stmt_insert->bindValue(":sale_type" , $this->source_type, PDO::PARAM_STR);
+                  $stmt_insert->bindValue(":step" , "1", PDO::PARAM_STR);
+                  $stmt_insert->bindValue(":query" , $full_query, PDO::PARAM_STR);
+                  $stmt_insert->execute();
+
+                  return 1; //SUCESSFULLY UPDATED DATA
+                } else {
+                    return "<br><br><center style='color: red;'><b>RETURNED QUERY VALUE SHOULD BE AN AMOUNT!</b></center>";
+                }
+
+          } else return "<br><br><center style='color: red;'><b>INVALID QUERY ENTERED! PLEASE CHECK SYNTAX!</b></center>";
+>>>>>>> step_3
+
+
 
 
     } catch (PDOException $e) {

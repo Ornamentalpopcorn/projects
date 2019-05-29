@@ -1,11 +1,12 @@
 <?php
   session_start();
-
+  // error_reporting(0);
   // include('../../../connection.php');
   // if(!isset($_SESSION['authUser'])){
   //   header('Location:../../../logout.php');
   // }
 
+<<<<<<< HEAD
   $server = 'localhost';
   $username = 'root';
   $password = '';
@@ -15,6 +16,23 @@
   // $username = 'epasadil_admin';
   // $password = 'Pr0+0c01$';
   // $dbname = 'epasadil_dev-smpp-db';
+=======
+  $url = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+  if (strpos($url, "localhost") !== FALSE) {
+
+    $server = 'localhost';
+    $username = 'root';
+    $password = '';
+    $dbname = 'dev_smpp';
+  } else {
+    $server = 'localhost';
+    $username = 'epasadil_admin';
+    $password = 'Pr0+0c01$';
+    $dbname = 'epasadil_dev-smpp-db';
+
+  }
+
+>>>>>>> step_3
 
   $charset = 'utf8';
   $options = array(
@@ -384,7 +402,6 @@ $(document).ready(function(){
       // if ($('#data-mdcode').val().trim() && $('#data-monthnum').val().trim() ) {
 
         var dataType = $("#dataType").val()
-        var action = "display value"
         var md = $("#data-mdcode").val().trim()
         var month = $("#data-monthnum").val().trim()
         if (month <= 9) {
@@ -394,6 +411,7 @@ $(document).ready(function(){
         var queryText = $("#queryText").val().trim()
         $("#data-displayvalue").attr("disabled", true)
 
+        var action = "display value"
         $.ajax({
           type: "POST",
           url: "includes/controller/productivityController.php",
@@ -402,7 +420,6 @@ $(document).ready(function(){
             key: key,
             month: month,
             md: md,
-            datatype: dataType,
             query: queryText
           },
           cache: false,
@@ -415,6 +432,10 @@ $(document).ready(function(){
 
             $("#displayResult").html(data)
             $("#data-displayvalue").attr("disabled", false)
+
+            $("#dataTable").dataTable({
+              paging: false
+            })
           },
           error: function(err) {
           }
@@ -444,7 +465,7 @@ $(document).ready(function(){
       setTimeout(function() {
           addToTxtFile(new_str)
           formattedQuery(new_str)
-          console.log(new_str)
+          // console.log(new_str)
       } , 500);
   })
 
@@ -533,7 +554,7 @@ $(document).ready(function(){
       $("#checkReportChanges").html('')
 
       var query = $("#queryText-editreport").val()
-      console.log('hehehe')
+
       $("#queryText-editreport").val(query + " " + $(this).text() )
 
       // var action = "edit source"
@@ -800,8 +821,8 @@ $(document).ready(function(){
   })
 
   $(document).on('click', '#data-apply', function (e) {
-        var sourceType = $("#sourceType").text()
         var sql = $("#queryText-editreport").val().trim()
+        var sourceType = $("#editApplySource").text()
 
         if (sql) {
 
@@ -851,6 +872,33 @@ $(document).ready(function(){
                 alert('Complete Missing Field!')
         }
 
+  })
+
+  $("#editSourceList a").click(function(){
+      var source_type = $(this).data('id')
+      $("#queryText-editreport").val('')
+      $("#editSourceToApply").html('<h3>Editing Computation For: ' + source_type + ' Sales</h3> <div id="editApplySource" style="display:none">' + source_type + '</div><hr>')
+      $("#editContent").css("display","block")
+
+      var action = "edit sales source"
+      $.ajax({
+        type: "POST",
+        url: "includes/controller/productivityController.php",
+        data: {
+          action: action,
+          key: key,
+          sourcetype: source_type
+        },
+        cache: false,
+        beforeSend: function() {
+
+        },
+        success: function (data) {
+           $("#queryText-editreport").val(data)
+        },
+        error: function(err) {
+        }
+      });
   })
 
 

@@ -12,7 +12,7 @@ interface ProductivityInterface extends ProductivityCommandInterface
 
     // STEP 1
     // STEP 1
-    public function displayResult($data_type, $md_code, $month, $query) ;
+    public function displayResult($md_code, $month, $query) ;
     // STEP 1
     // STEP 1
 
