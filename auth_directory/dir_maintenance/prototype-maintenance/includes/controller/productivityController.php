@@ -3,7 +3,7 @@
   // include('../../../../../connection.php');
   header('Access-Control-Allow-Origin: *');
   session_start();
- 
+
   $url = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
   if (strpos($url, "localhost") !== FALSE) {
 

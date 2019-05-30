@@ -6,9 +6,6 @@
   //   header('Location:../../../logout.php');
   // }
 
-
-
-
   $url = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
   if (strpos($url, "localhost") !== FALSE) {
 
@@ -62,8 +59,9 @@
   if (file_exists($_SESSION['auth_usercode']. ".txt") ) unlink($_SESSION['auth_usercode']. ".txt");
 
   // echo $actual_link = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
-  $result = $stringCalc->calculate("(2-1)*5");
- 
+  $f = "(2-1)*5/2";
+  $result = $stringCalc->calculate($f);
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -547,7 +545,7 @@ $(document).ready(function(){
 
       var query = $("#queryText-editreport").val()
 
-      $("#queryText-editreport").val(query + " " + $(this).text() )
+      $("#queryText-editreport").val(query + " " + $(this).text() ) 
 
       // var action = "edit source"
       // $.ajax({

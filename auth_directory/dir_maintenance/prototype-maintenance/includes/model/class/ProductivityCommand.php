@@ -229,6 +229,7 @@ trait ProductivityCommand
                source_type,
                source_name,
                full_query,
+               is_absolute,
                upload_status
              )
              VALUES
@@ -237,17 +238,23 @@ trait ProductivityCommand
                :source_type,
                :source_name,
                :full_query,
+               :is_absolute,
                :upload_status
              )
              ";
              $stmt_insert = $conn_pdo->prepare($sql);
 
              $source_id = md5( rand(0,892281) . time() . rand(0,21321) );
+             if (strpos(strtoupper($query), "GROUP BY") !== FALSE) {
+                    $is_absolute = 0;
+             } else $is_absolute = 1;
+
 
              $stmt_insert->bindValue(":source_id" , $source_id, PDO::PARAM_STR);
              $stmt_insert->bindValue(":source_type" , $this->source_type, PDO::PARAM_STR);
              $stmt_insert->bindValue(":source_name" , $this->source_name, PDO::PARAM_STR);
              $stmt_insert->bindValue(":full_query" , $query, PDO::PARAM_STR);
+             $stmt_insert->bindValue(":is_absolute" , $is_absolute, PDO::PARAM_STR);
              $stmt_insert->bindValue(":upload_status" , '1', PDO::PARAM_STR);
              $stmt_insert->execute();
 
@@ -283,7 +290,7 @@ trait ProductivityCommand
     try {
       $query = "";
       $sql = "SELECT query
-      FROM  reference_sales_step_list
+      FROM  reference_step_list
       WHERE sale_type = '$this->source_type'
       ";
       $data = $this->querySelect($sql);
@@ -340,6 +347,41 @@ trait ProductivityCommand
   // NOTE:*******************************************************************************************************STEP 3
   // NOTE:*******************************************************************************************************STEP 3
 
+  // NOTE:*******************************************************************************************************STEP 4
+  // NOTE:*******************************************************************************************************STEP 4
+    public function getSourceName($query)
+    {
+      global $conn_pdo;
+      try {
+         $txt = "";
+         $sql = "SELECT DISTINCT source_name
+         FROM reference_source_list
+         WHERE 1=1
+                AND upload_status = 1 ";
+          $data = $this->querySelect($sql);
+          if ($data) {
+                foreach ($data as $row) {
+                   $source_name = $row['source_name'];
+
+                   if (strpos($query, $source_name) !== FALSE) {
+                      $txt = $source_name;
+                      break 1;
+                   }
+
+                }
+          } else $txt = "";
+
+        return $txt;
+
+      } catch (PDOException $e) {
+          throw new Exception("Connection failed: ". $e->getMessage());
+      }
+    }
+
+
+  // NOTE:*******************************************************************************************************STEP 4
+  // NOTE:*******************************************************************************************************STEP 4
+
 
     public function saveSource()
     {
@@ -370,6 +412,7 @@ trait ProductivityCommand
                           source_id,
                           source_name,
                           full_query,
+                          is_absolute,
                           upload_status
                         )
                         VALUES
@@ -377,30 +420,50 @@ trait ProductivityCommand
                           :source_id,
                           :source_name,
                           :full_query,
+                          :is_absolute,
                           :upload_status
                         )
                         ";
                         $stmt_insert = $conn_pdo->prepare($sql);
 
                         $source_id = md5( rand(0,892281) . time() . rand(0,21321) );
+                        if (strpos(strtoupper($this->source), "GROUP BY") !== FALSE) {
+                               $is_absolute = 0;
+                        } else $is_absolute = 1;
 
                         $stmt_insert->bindValue(":source_id" , $source_id, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":source_name" , $this->source_title, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":full_query" , $this->source, PDO::PARAM_STR);
+                        $stmt_insert->bindValue(":is_absolute" , $is_absolute, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":upload_status" , '1', PDO::PARAM_STR);
                         $stmt_insert->execute();
 
                   } else { // update
 
-                      $source_id = $this->source_type;
-                      $sql = "UPDATE reference_source_list
-                      SET source_name = ?,
-                          full_query = ?
-                      WHERE source_id = '$source_id'
-                      ";
-                      $stmt = $conn_pdo->prepare($sql);
-                      $stmt->execute($parameters);
-                     ;
+                      if (strpos(strtoupper($this->source), "GROUP BY") !== FALSE) {
+
+                        $source_id = $this->source_type;
+                        $sql = "UPDATE reference_source_list
+                        SET source_name = ?,
+                            full_query = ?,
+                            is_absolute = 0
+                        WHERE source_id = '$source_id'
+                        ";
+                        $stmt = $conn_pdo->prepare($sql);
+                        $stmt->execute($parameters);
+                      } else {
+                        $source_id = $this->source_type;
+                        $sql = "UPDATE reference_source_list
+                        SET source_name = ?,
+                            full_query = ?,
+                            is_absolute = 1
+                        WHERE source_id = '$source_id'
+                        ";
+                        $stmt = $conn_pdo->prepare($sql);
+                        $stmt->execute($parameters);
+
+                      }
+
                   }
 
                 return '<br><center><div class="alert alert-success" role="alert">Source Successfully Created!</div></center>';
@@ -636,7 +699,7 @@ trait ProductivityCommand
       try {
         $source_list = "";
 
-        $sql = "SELECT source_id, source_name
+        $sql = "SELECT source_id, source_name, is_absolute
         FROM reference_source_list
         WHERE 1=1
               AND upload_status = '1'
@@ -648,9 +711,13 @@ trait ProductivityCommand
           $source_list .= "<ul class='list-group list-group-flush list-group-item-action'>";
           $source_list .="<li class='list-group-item' style='background-color: #3c8aea; color: white'>DATA SOURCE LIST</li>";
           foreach ($data as $row) {
+              if ($row['is_absolute']) {
+                      $source = "[[" . $row['source_name'] . "]]";
+              } else  $source = $row['source_name'];
+
              $source_list .= '<li class="list-group-item">
              <a href="#" class="sourceList" style="text-decoration:none"
-             data-id="' . $row['source_id'] . '"><i class="fas fa-angle-right"></i> ' . $row['source_name'] . '</a></li>';
+             data-id="' . $row['source_id'] . '"><i class="fas fa-angle-right"></i> ' . $source . '</a></li>';
 
           }
           $source_list .= "</ul>";
@@ -899,8 +966,6 @@ trait ProductivityCommand
           return "-------------------------INVALID QUERY, PLEASE CHECK SYNTAX!------------------------- \n\n"  ;
       }
     }
-
-
 
 
     public function insertSource() {
