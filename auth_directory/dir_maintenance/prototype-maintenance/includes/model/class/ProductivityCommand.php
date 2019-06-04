@@ -244,7 +244,7 @@ trait ProductivityCommand
              ";
              $stmt_insert = $conn_pdo->prepare($sql);
 
-             $source_id = md5( rand(0,892281) . time() . rand(0,21321) );
+             $source_id =  rand(0,99) . time() . rand(0,99) ;
              if (strpos(strtoupper($query), "GROUP BY") !== FALSE) {
                     $is_absolute = 0;
              } else $is_absolute = 1;
@@ -402,8 +402,10 @@ trait ProductivityCommand
                return '<br><center><div class="alert alert-danger" role="alert">Source Already Exists!</div></center>';
         } else {
 
-              $check_syntax = $this->checkQuerySyntax($this->source, $this->source);
-              if ($check_syntax == 1) {
+              if (strpos($this->source, "SELECT") !== FALSE) {
+
+                $check_syntax = $this->checkQuerySyntax($this->source, $this->source);
+                if ($check_syntax == 1) {
 
                   if ($this->source_type == "new") {
 
@@ -413,6 +415,7 @@ trait ProductivityCommand
                           source_name,
                           full_query,
                           is_absolute,
+                          is_single_query,
                           upload_status
                         )
                         VALUES
@@ -421,59 +424,98 @@ trait ProductivityCommand
                           :source_name,
                           :full_query,
                           :is_absolute,
+                          :is_single_query,
                           :upload_status
                         )
                         ";
                         $stmt_insert = $conn_pdo->prepare($sql);
 
-                        $source_id = md5( rand(0,892281) . time() . rand(0,21321) );
+                        $source_id =  rand(0,100) . time() . rand(0,100) ;
                         if (strpos(strtoupper($this->source), "GROUP BY") !== FALSE) {
-                               $is_absolute = 0;
+                          $is_absolute = 0;
                         } else $is_absolute = 1;
+
+                        if (strpos(strtoupper($this->source), "SELECT") !== FALSE) {
+                          $is_single_query = 1;
+                        } else $is_single_query = 0;
 
                         $stmt_insert->bindValue(":source_id" , $source_id, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":source_name" , $this->source_title, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":full_query" , $this->source, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":is_absolute" , $is_absolute, PDO::PARAM_STR);
+                        $stmt_insert->bindValue(":is_single_query" , $is_single_query, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":upload_status" , '1', PDO::PARAM_STR);
                         $stmt_insert->execute();
 
                   } else { // update
 
-                      if (strpos(strtoupper($this->source), "GROUP BY") !== FALSE) {
+                        if (strpos(strtoupper($this->source), "GROUP BY") !== FALSE) {
 
-                        $source_id = $this->source_type;
-                        $sql = "UPDATE reference_source_list
-                        SET source_name = ?,
-                            full_query = ?,
-                            is_absolute = 0
-                        WHERE source_id = '$source_id'
-                        ";
-                        $stmt = $conn_pdo->prepare($sql);
-                        $stmt->execute($parameters);
-                      } else {
-                        $source_id = $this->source_type;
-                        $sql = "UPDATE reference_source_list
-                        SET source_name = ?,
-                            full_query = ?,
-                            is_absolute = 1
-                        WHERE source_id = '$source_id'
-                        ";
-                        $stmt = $conn_pdo->prepare($sql);
-                        $stmt->execute($parameters);
+                          $source_id = $this->source_type;
+                          $sql = "UPDATE reference_source_list
+                          SET source_name = ?,
+                          full_query = ?,
+                          is_absolute = 0
+                          WHERE source_id = '$source_id'
+                          ";
+                          $stmt = $conn_pdo->prepare($sql);
+                          $stmt->execute($parameters);
+                        } else {
+                          $source_id = $this->source_type;
+                          $sql = "UPDATE reference_source_list
+                          SET source_name = ?,
+                          full_query = ?,
+                          is_absolute = 1
+                          WHERE source_id = '$source_id'
+                          ";
+                          $stmt = $conn_pdo->prepare($sql);
+                          $stmt->execute($parameters);
 
-                      }
+                        }
 
                   }
 
-                return '<br><center><div class="alert alert-success" role="alert">Source Successfully Created!</div></center>';
-              } else {
-                return '<br><center><div class="alert alert-danger" role="alert">' . $check_syntax . '</div></center>';
+                  return '<br><center><div class="alert alert-success" role="alert">Source Successfully Created!</div></center>';
+                } else {
+                  return '<br><center><div class="alert alert-danger" role="alert">' . $check_syntax . '</div></center>';
+                }
+
+              } else { // COMBINED DATA SOURCE
+
+                          $sql = "INSERT INTO reference_source_list
+                          (
+                            source_id,
+                            source_name,
+                            full_query,
+                            is_absolute,
+                            is_single_query,
+                            upload_status
+                          )
+                          VALUES
+                          (
+                            :source_id,
+                            :source_name,
+                            :full_query,
+                            :is_absolute,
+                            :is_single_query,
+                            :upload_status
+                          )
+                          ";
+                          $stmt_insert = $conn_pdo->prepare($sql);
+
+                          $source_id =  rand(0,100) . time() . rand(0,100) ;
+                          $is_absolute = 0;
+                          $is_single_query = 0;
+
+                          $stmt_insert->bindValue(":source_id" , $source_id, PDO::PARAM_STR);
+                          $stmt_insert->bindValue(":source_name" , $this->source_title, PDO::PARAM_STR);
+                          $stmt_insert->bindValue(":full_query" , $this->source, PDO::PARAM_STR);
+                          $stmt_insert->bindValue(":is_absolute" , $is_absolute, PDO::PARAM_STR);
+                          $stmt_insert->bindValue(":is_single_query" , $is_single_query, PDO::PARAM_STR);
+                          $stmt_insert->bindValue(":upload_status" , '1', PDO::PARAM_STR);
+                          $stmt_insert->execute();
+                          return '<br><center><div class="alert alert-success" role="alert">Source Successfully Created!</div></center>';
               }
-
-
-
-
 
         }
 
