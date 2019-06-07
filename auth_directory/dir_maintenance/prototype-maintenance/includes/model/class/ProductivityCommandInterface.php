@@ -33,6 +33,10 @@ interface ProductivityCommandInterface
 
     public function getSourceName($sql);
 
+    public function filterSourceEquivalent($source);
+    public function fetchSourceEquivalent($source_to_test);
+    public function ifPerformQuery();
+
 
 
 }

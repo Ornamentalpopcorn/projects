@@ -545,7 +545,7 @@ $(document).ready(function(){
 
       var query = $("#queryText-editreport").val()
 
-      $("#queryText-editreport").val(query + " " + $(this).text() ) 
+      $("#queryText-editreport").val(query + " " + $(this).text() )
 
       // var action = "edit source"
       // $.ajax({
@@ -767,8 +767,8 @@ $(document).ready(function(){
 
                       $("#data-title").val('')
                       $("#data-mdcode").val('')
-
                       $("#queryText").val('')
+
                       var action = "display source"
                       $.ajax({
                         type: "POST",
@@ -793,7 +793,7 @@ $(document).ready(function(){
 
                   $("#data-save").attr("disabled", false)
                   setTimeout(function() {
-                    $("#displayResult").fadeOut()
+                    // $("#displayResult").fadeOut()
 
                   } , 5000);
 

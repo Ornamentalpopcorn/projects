@@ -228,6 +228,7 @@ trait ProductivityCommand
                source_id,
                source_type,
                source_name,
+               source_equivalent,
                full_query,
                is_absolute,
                upload_status
@@ -237,6 +238,7 @@ trait ProductivityCommand
                :source_id,
                :source_type,
                :source_name,
+               :source_equivalent,
                :full_query,
                :is_absolute,
                :upload_status
@@ -244,15 +246,20 @@ trait ProductivityCommand
              ";
              $stmt_insert = $conn_pdo->prepare($sql);
 
-             $source_id =  rand(0,99) . time() . rand(0,99) ;
+             $source_id =  rand(0,999) . time() . rand(0,999) ;
              if (strpos(strtoupper($query), "GROUP BY") !== FALSE) {
                     $is_absolute = 0;
              } else $is_absolute = 1;
 
+             if (strpos($query, "SELECT") !== FALSE &&
+                 strpos($query, "FROM") !== FALSE) {
+                    $source_equivalent = $source_id;
+             } else $source_equivalent = $this->filterSourceEquivalent($this->source);
 
              $stmt_insert->bindValue(":source_id" , $source_id, PDO::PARAM_STR);
              $stmt_insert->bindValue(":source_type" , $this->source_type, PDO::PARAM_STR);
              $stmt_insert->bindValue(":source_name" , $this->source_name, PDO::PARAM_STR);
+             $stmt_insert->bindValue(":source_equivalent" , $this->source_name, PDO::PARAM_STR);
              $stmt_insert->bindValue(":full_query" , $query, PDO::PARAM_STR);
              $stmt_insert->bindValue(":is_absolute" , $is_absolute, PDO::PARAM_STR);
              $stmt_insert->bindValue(":upload_status" , '1', PDO::PARAM_STR);
@@ -413,6 +420,7 @@ trait ProductivityCommand
                         (
                           source_id,
                           source_name,
+                          source_equivalent,
                           full_query,
                           is_absolute,
                           is_single_query,
@@ -422,6 +430,7 @@ trait ProductivityCommand
                         (
                           :source_id,
                           :source_name,
+                          :source_equivalent,
                           :full_query,
                           :is_absolute,
                           :is_single_query,
@@ -430,17 +439,23 @@ trait ProductivityCommand
                         ";
                         $stmt_insert = $conn_pdo->prepare($sql);
 
-                        $source_id =  rand(0,100) . time() . rand(0,100) ;
+                        $source_id =  rand(0,999) . time() . rand(0,999) ;
                         if (strpos(strtoupper($this->source), "GROUP BY") !== FALSE) {
                           $is_absolute = 0;
                         } else $is_absolute = 1;
 
                         if (strpos(strtoupper($this->source), "SELECT") !== FALSE) {
-                          $is_single_query = 1;
+                               $is_single_query = 1;
                         } else $is_single_query = 0;
+
+                        if (strpos($this->source, "SELECT") !== FALSE &&
+                            strpos($this->source, "FROM") !== FALSE) {
+                               $source_equivalent = $source_id;
+                        } else $source_equivalent = $this->filterSourceEquivalent($this->source);
 
                         $stmt_insert->bindValue(":source_id" , $source_id, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":source_name" , $this->source_title, PDO::PARAM_STR);
+                        $stmt_insert->bindValue(":source_equivalent" , $source_equivalent, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":full_query" , $this->source, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":is_absolute" , $is_absolute, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":is_single_query" , $is_single_query, PDO::PARAM_STR);
@@ -486,6 +501,7 @@ trait ProductivityCommand
                           (
                             source_id,
                             source_name,
+                            source_equivalent,
                             full_query,
                             is_absolute,
                             is_single_query,
@@ -495,6 +511,7 @@ trait ProductivityCommand
                           (
                             :source_id,
                             :source_name,
+                            :source_equivalent,
                             :full_query,
                             :is_absolute,
                             :is_single_query,
@@ -503,12 +520,18 @@ trait ProductivityCommand
                           ";
                           $stmt_insert = $conn_pdo->prepare($sql);
 
-                          $source_id =  rand(0,100) . time() . rand(0,100) ;
+                          $source_id =  rand(0,999) . time() . rand(0,999) ;
                           $is_absolute = 0;
                           $is_single_query = 0;
 
+                          if (strpos($this->source, "SELECT") !== FALSE &&
+                              strpos($this->source, "FROM") !== FALSE) {
+                                 $source_equivalent = $source_id;
+                          } else $source_equivalent = $this->filterSourceEquivalent($this->source);
+
                           $stmt_insert->bindValue(":source_id" , $source_id, PDO::PARAM_STR);
                           $stmt_insert->bindValue(":source_name" , $this->source_title, PDO::PARAM_STR);
+                          $stmt_insert->bindValue(":source_equivalent" , $source_equivalent, PDO::PARAM_STR);
                           $stmt_insert->bindValue(":full_query" , $this->source, PDO::PARAM_STR);
                           $stmt_insert->bindValue(":is_absolute" , $is_absolute, PDO::PARAM_STR);
                           $stmt_insert->bindValue(":is_single_query" , $is_single_query, PDO::PARAM_STR);
@@ -519,14 +542,124 @@ trait ProductivityCommand
 
         }
 
-
-
         return $this->source . " " . $this->source_title;
 
       } catch (PDOException $e) {
           throw new Exception("Connection failed: ". $e->getMessage());
       }
 
+    }
+
+    public function filterSourceEquivalent($source)
+    {
+      global $conn_pdo;
+      try {
+          $continue = 1;
+
+          $source_equivalent = $source;
+          do { // NOTE : CONTINUE UNTIL ALL SOURCE HAS BEEN TRANSLATED TO SOURCE ID
+
+              $counter = 0;
+              $sql = "SELECT source_name, full_query, is_single_query
+              FROM reference_source_list
+              GROUP BY source_name";
+              $data = $this->querySelect($sql);
+              foreach ($data as $row) {
+                $source_name = $row['source_name'];
+                $full_query = $row['full_query'];
+                $is_single_query = $row['is_single_query'];
+                // echo $source_name . "<br>";
+                if (strpos($source_equivalent, $source_name) !== FALSE) {
+
+                  $source_equivalent = str_replace($source_name,
+                                                   $this->fetchSourceEquivalent($source_name),
+                                                   $source_equivalent );
+                  $counter++;
+                } // IF STRPOS
+
+              } // foreach
+
+              if ($counter == 0) $continue = 0; // EXIT OUT OF LOOP
+
+          } while ($continue >= 1);
+
+          return $source_equivalent;
+
+      } catch (PDOException $e) {
+          throw new Exception("Connection failed: ". $e->getMessage());
+      }
+    }
+
+
+    public function fetchSourceEquivalent($source_to_test)
+    {
+      try {
+        $equivalent_query = "";
+        $is_source = 0;
+        $sql = "SELECT source_id, source_name, full_query, is_single_query
+        FROM reference_source_list
+        WHERE 1=1
+              AND source_name = '$source_to_test' ";
+        $data = $this->querySelect($sql) ;
+        foreach ($data as $row) {
+
+          if (strpos($row['full_query'], "SELECT") !== FALSE &&
+              strpos($row['full_query'], "FROM") !== FALSE ) { // CHECK IF QUERY IS DATA SOURCE OR QUERY
+                 $is_source = 1;
+                 $equivalent_query = $row['source_id'];
+          } else $equivalent_query = $row['full_query'];
+
+        } // foreach
+        if (!$is_source) {
+          $equivalent_query = "(" . $equivalent_query . ")";
+        }
+
+        return $equivalent_query;
+
+      } catch (PDOException $e) {
+          throw new Exception("Connection failed: ". $e->getMessage());
+      }
+    }
+
+    public function ifPerformQuery()
+    {
+      global $conn_pdo;
+      try {
+        $perform_query = 0;
+        $sql = "SELECT query, group_by
+        FROM reference_source_list as a
+        INNER JOIN reference_sales_step as b
+              ON a.source_id = b.query
+        WHERE 1=1
+              AND is_absolute = 0
+              AND b.sale_type = '$this->source_type'
+        GROUP BY query
+        ";
+
+        $k = 0; $group_list = array();
+        $data = $this->querySelect($sql);
+        foreach ($data as $row) {
+            $group_list[] = $row['group_by'] ;
+            $k++;
+        } // foreach
+
+        for ($i=0; $i < $k ; $i++) {
+
+          $grouping = $group_list;
+          $current_group = $grouping[$i];
+          unset($grouping[$i]);
+
+          foreach ($grouping as $group) {
+            if (strpos($group, $current_group) !== FALSE) {
+                $perform_query++;
+            }
+          }
+        }
+        return $perform_query;
+
+      } catch (PDOException $e) {
+          throw new Exception("Connection failed: ". $e->getMessage());
+      }
     }
 
     public function buildQuery($source_id, $given_id, $data_id, $sale_type, $crediting_date)

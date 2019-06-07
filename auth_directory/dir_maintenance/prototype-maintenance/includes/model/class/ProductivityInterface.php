@@ -22,8 +22,10 @@ interface ProductivityInterface extends ProductivityCommandInterface
     // STEP 4
     public function translateQuery($query_placement, $sql);
     public function computeSources($query_placement, $pseudo_syntax);
-    public function getSetSales($query_placement, $sql);
-    public function getSubSetSales($query_placement, $sql);
+    public function getSetSales($query_placement, $sub_query_placement, $source_id, $sql);
+    public function performComputation($syntax_to_perform);
+    
+    // public function getSubSetSales($query_placement, $sql);
     // STEP 4
 
     // public function checkFetchData($id, $data_id, $data_parameter, $data_parameter_constraint, $data_value);

@@ -553,7 +553,9 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
 
                   if ($operator) {
                     $operator_list[] = $operator;
-                    $c = 0; $query_placement = 0; $query_syntax = "";
+                    $c = 0;
+                    $query_placement = 0;
+                    $query_syntax = "";
                     foreach ($query_list as $query) {
                         ++$query_placement;
 
@@ -574,7 +576,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
             // $this->computeSources($this->$source_type, $pseudo_syntax) ;
 
         } else { // NOTE:::: NO FORMULA IS USED
-                $this->translateQuery("q1", $this->source );
+              $this->translateQuery("q1", $this->source );
         }
         // echo print_r($pseudo_syntax);
 
@@ -610,7 +612,9 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
     global $conn_pdo;
     try {
 
-    $sql = "SELECT full_query, is_single_query
+    $query = str_replace("[[", "", $query);
+    $query = str_replace("]]", "", $query);
+    $sql = "SELECT source_equivalent, full_query, is_single_query
     FROM reference_source_list
     WHERE 1=1
           AND source_name LIKE ?
@@ -622,19 +626,85 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
     if ($data_query) {
 
         foreach ($data_query as $row_query) {
-           $equivalent_query = $row_query['full_query'] ;
-           $is_single_query = $row_query['is_single_query'];
+           $source_equivalent = $row_query['source_equivalent'] ;
         } // foreach row
 
-        if ($is_single_query) { // IF SINGLE QUERY
+        $continue = 1;
+        $i = 1;
+        $syntax_to_perform = $source_equivalent;
+        $sub_query_placement = 1;
 
-              $this->getSetSales($query_placement, $equivalent_query) ;
+        foreach (explode(" ", $source_equivalent) as $source_text) {
 
-        } else {
+            $sql = "SELECT source_id, full_query
+            FROM reference_source_list
+            WHERE 1=1
+            GROUP BY source_id ";
 
-              $this->getSubSetSales($query_placement, $equivalent_query);
+            $data_2 = $this->querySelect($sql);
+            foreach ($data_2 as $row_2) {
+                $source_id = $row_2['source_id'] ;
+                $sql_statement = $row_2['full_query'] ;
+                if (strpos($source_text, $source_id) !== FALSE) {
 
-        } // END ELSE
+                    // NOTE: DOUBLE ASTERISK (**) DENOTES RETURNED VALUE IS A SINGLE VALUE AND NOT A GROUP OF VALUES
+                    // **SET VALUE = GROUP OF VALUES EX. MD 1 SALES, MD 2 SALES ETC.....
+                    // ABSOLUTE VALUE = SINGLE VALUE EX. TOTAL MDC SALES
+
+                    $position = strpos($syntax_to_perform, $source_id);
+                    $is_absolute_value = $this->getSetSales($query_placement, $sub_query_placement, $source_id, $sql_statement) ;
+                    if ($is_absolute_value) {
+                           $syntax_to_perform = substr_replace($syntax_to_perform, "**q" . $sub_query_placement, $position, strlen($source_id));
+                    } else $syntax_to_perform = substr_replace($syntax_to_perform, "q" . $sub_query_placement, $position, strlen($source_id));
+                    $sub_query_placement++;
+                    // }
+                }
+
+            } // foreach
+
+        }
+
+        echo $result = $this->performComputation($syntax_to_perform);
+        // echo "$source_equivalent <br><br>";
+        // echo $syntax_to_perform ;
+        // echo "<br><br>";
+        // $f = "((((((100 - 99) * .2) / 5) - 3) + 100) / .3) + 72.1";
+        // $result = $this->calculate($f);
+        // echo $result;
+
+
+        // do {
+        //   $sql = "SELECT source_id, full_query
+        //   FROM reference_source_list
+        //   WHERE 1=1
+        //   GROUP BY source_id ";
+        //
+        //   $data_2 = $this->querySelect($sql);
+        //   foreach ($data_2 as $row_2) {
+        //       $source_id = $row_2['source_id'] ;
+        //
+        //       if (strpos($new_source, $source_id) !== FALSE) {
+        //             // echo $new_source . "||" . $source_id;
+        //             // echo "<br><br>";
+        //
+        //             $pos = strpos($new_source, $source_id);
+        //             // $new_source = str_replace($source_id, "removed", $new_source);
+        //             $new_source = substr_replace($new_source, "<span style='color:red'>removed</span>", $pos, strlen($source_id));
+        //
+        //       }
+        //
+        //   } // foreach
+        //
+        //   $i++;
+        //
+        //   if ($i == 6) {
+        //     $continue = 0;
+        //   }
+        //
+        // } while ($continue >= 1);
+
+        // $this->getSetSales($query_placement, $source_equivalent) ;
+        // $this->getSubSetSales($query_placement, $equivalent_query);
 
     } // if data query
 
@@ -645,200 +715,360 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
     }
   }
 
-  public function getSetSales($query_placement, $sql_statement)
+  public function getSetSales($query_placement, $sub_query_placement, $source_id, $sql_statement)
   {
     global $conn_pdo;
     try {
+      $group_by = "";
 
-      $group_query = explode("GROUP BY", $sql_statement);
-      $group_by = $group_query[1];
+      if (strpos($sql_statement, "GROUP BY") !== FALSE) {
+             $group_query = explode("GROUP BY", $sql_statement);
+             $group_by = $group_query[1];
+             $group_by = trim(str_replace("LIMIT 10", "", $group_by) );
+             $absolute_value = 0;
+      } else $absolute_value = 1;;
 
       $data = $this->querySelect($sql_statement) ;
       if ($data) {
-          foreach ($data as $key => $row) {
-
-            foreach ($row as $key2 => $value) {
-                $key_values[$key2][] = $value;
-                $key_list[] = $key2;
-            }  // foreach 2
-
-          } // foreach 1
 
           $sql = "DELETE FROM reference_sales_step
-          WHERE step = '" . str_replace("q", "", $query_placement) . "' ";
+          WHERE 1=1
+                AND step = '" . str_replace("q", "", $query_placement) . "'
+                AND sub_step = '" .  $sub_query_placement . "'
+          ";
           $stmt = $conn_pdo->prepare($sql);
           $stmt->execute();
 
+          foreach ($data as $key => $row) {
+            foreach ($row as $key2 => $value) {
+                $column_name = strtolower($key2);
+                $key_values[$column_name][] = $value;
+                $key_list[] = $column_name;
+            }  // foreach 2
+          } // foreach 1
           $key_list = array_unique($key_list);
-          for ($i=0; $i <= count($key_values[$list]) ; $i++) {
-            $data_set = "(
-                          '$this->source_type',
-                          '$this->$equivalent_query',
-                          '" . str_replace("q", "", $query_placement) . "',
-                          '$group_by'" ;
-             $c = 0;
-
-            foreach ($key_list as $list) {
-
-                if ($key_values[$list][$i]) {
-                  $data_set .= ", '" . $key_values[$list][$i] . "' ";
-                  $c++;
-                }
-            }
-            $data_set .= ")";
-            if ($c >= 1) {
-              $array_list[] = $data_set;
-            }
-          }
 
           $new_key_list = array();
           foreach ($key_list as $key) {
-             if (strpos($key, "SUM") !== FALSE) {
-                     $k = str_replace("SUM(", "", $key);
+             if (strpos($key, "sum") !== FALSE) {
+                     $k = str_replace("sum(", "", $key);
                      $k = str_replace(")", "", $k);
                      $new_key_list[] = $k;
              } else  $new_key_list[] = $key;
           }
-          $sql = "INSERT INTO reference_sales_step  ( sale_type, step, group_by, " . implode(", ", $new_key_list) .
-           ") VALUES " . implode("," , $array_list);
-           $stmt = $conn_pdo->prepare($sql);
-           $stmt->execute();
 
+          $values_key_list = array();
+          foreach ($key_list as $key) {
+             if (strpos($key, "sum") !== FALSE) {
+                     $k = str_replace("sum(", "", $key);
+                     $k = str_replace(")", "", $k);
+                     $values_key_list[] = ":" .$k;
+             } else  $values_key_list[] = ":" . $key;
+          }
+
+          $sql = "INSERT INTO reference_sales_step
+                  (
+                    sale_type,
+                    query,
+                    step,
+                    sub_step,
+                    group_by,
+                    " . implode(", ", $new_key_list) . "
+                  )
+                  VALUES
+                  (
+                    :sale_type,
+                    :query,
+                    :step,
+                    :sub_step,
+                    :group_by,
+                    " . implode(", ", $values_key_list) . "
+                  )
+                  "  ;
+                  $stmt_insert = $conn_pdo->prepare($sql);
+
+                  $array_list = array();
+                  for ($i=0; $i <= count($key_values[$list]) ; $i++) {
+                      $arr =  array(
+                          'sale_type' => $this->source_type,
+                          'query' => $source_id,
+                          'step' => str_replace("q", "", $query_placement),
+                          'sub_step' => $sub_query_placement,
+                          'group_by' => $group_by
+                      );
+
+                      foreach ($key_list as $list) {
+
+                           $column_name = str_replace("sum(", "", $list );
+                           $column_name = str_replace(")", "", $column_name);
+
+                           if (strpos($column_name, "total_amount") !== FALSE) {
+                             if ($key_values[$list][$i] > 0) $add_to_array = 1;
+                             else                            $add_to_array = 0;
+                           }
+
+                           $arr2 = array(
+                                $column_name => $key_values[$list][$i]
+                           );
+                           $arr = array_merge($arr, $arr2);
+                      }
+                      if ($add_to_array) {
+                        $array_list[] = $arr;
+                      }
+                  }
+
+                  $conn_pdo->beginTransaction();
+                  foreach ($array_list as $key => $value) {
+                    foreach ($value as $column_name => $column_value) {
+                          $stmt_insert->bindValue(":" . $column_name , $column_value, PDO::PARAM_STR);
+                    }
+                    $stmt_insert->execute();
+                  }
+                  $conn_pdo->commit();
 
       }
-      return true;
+      return $absolute_value;
 
     } catch (\Exception $e) {
           throw new Exception("Connection failed: ". $e->getMessage());
     }
   }
 
-
-  public function getSubSetSales($query_placement, $sql_statement)
+  public function performComputation($syntax_to_perform)
   {
     global $conn_pdo;
     try {
 
-      $sql = "SELECT DISTINCT source_name
-      FROM reference_source_list
-      WHERE 1=1
-             AND upload_status = 1 ";
-       $source_data = $this->querySelect($sql);
-       if ($source_data) {
+      $perform_query = $this->ifPerformQuery();
 
-         foreach ($source_data as $source_row) {
-            $source_name = $source_row['source_name'];
+      if ($perform_query) {
+              $sales_list = array();
+              $group_list = array() ;
 
-            if (strpos($sql_statement, $source_name) !== FALSE) {
+              $sql = "SELECT sub_step, group_by
+              FROM reference_sales_step
+              WHERe 1=1
+                    AND sale_type = '$this->source_type'
+              GROUP BY sub_step
+              ";
+              $data = $this->querySelect($sql);
+              foreach ($data as $row) {
+                   $sub_step = $row['sub_step'] ;
+                   $grouped_by = $row['group_by'] ;
 
-               $sub_query_list[] = $source_name;
-               $sql_statement = str_replace($source_name,"" , $sql_statement);
-
-            }
-
-         }
-
-         if ($sub_query_list) {
-
-           $sub_step = 1;
-           foreach ($sub_query_list as $query) {
-               $key_list = array(); $array_list = array();
-               $sql = "SELECT full_query
-               FROM reference_source_list
-               WHERE 1=1
-                     AND source_name LIKE ?
-               GROUP BY source_id ";
-               $stmt = $conn_pdo->prepare($sql);
-               $stmt->execute([$query . "%"]);
-               $data_query = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                 foreach ($data_query as $row_query) {
-                    $equivalent_query = $row_query['full_query'] ;
-                 } // foreach row
-
-               $group_query = explode("GROUP BY", $equivalent_query);
-               $group_by = $group_query[1];
-
-               $data = $this->querySelect($equivalent_query) ;
-               if ($data) {
-                   foreach ($data as $key => $row) {
-
-                     foreach ($row as $key2 => $value) {
-
-                         $key_values[$key2][] = $value;
-                         $key_list[] = $key2;
-                     }  // foreach 2
-
-                   } // foreach 1
-
-                   $sql = "DELETE FROM reference_sales_step
-                   WHERE 1=1
-                         AND step = '" . str_replace("q", "", $query_placement) . "'
-                         AND sub_step = '" . str_replace("q", "", $query_placement) . ".$sub_step'
+                    $sql = "SELECT *
+                    FROM reference_sales_step
+                    WHERE 1=1
+                         AND sale_type = '$this->source_type'
+                         AND sub_step = '$sub_step'
                     ";
-                   $stmt = $conn_pdo->prepare($sql);
-                   $stmt->execute();
+                    $data_sales = $this->querySelect($sql) ;
 
-                   $key_list = array_unique($key_list);
-                   for ($i=0; $i <= count($key_values[$list]) ; $i++) {
-                     $data_set = "( '$this->source_type',
-                                   '" . $equivalent_query . "',
-                                   '" . str_replace("q", "", $query_placement) . "',
-                                   '" . str_replace("q", "", $query_placement) . ".$sub_step',
-                                   '$group_by' " ;
-                     $c = 0;
+                    foreach ($data_sales as $row_sales) {
 
-                     foreach ($key_list as $list) {
-                         if ($key_values[$list][$i]) {
-                           $data_set .= ", '" . $key_values[$list][$i] . "' ";
-                           $c++;
-                         }
-                     }
-                     $data_set .= ")";
-                     if ($c >= 1) {
-                       $array_list[] = $data_set ;
-                     }
-                   }
+                        if ($grouped_by) {
+                                $arr = array();
+                                foreach ($row_sales as $key2 => $value2) {
+                                    // echo $key2 . " || " . $value2;
+                                    // echo "<br>";
 
-                   $new_key_list = array();
-                   foreach ($key_list as $key) {
-                      $key = strtoupper($key);
-                      if (strpos($key, "SUM") !== FALSE) {
-                              $k = str_replace("SUM(", "", $key);
-                              $k = str_replace(")", "", $k);
-                              $new_key_list[] = $k;
-                      } else  $new_key_list[] = $key;
-                   }
+                                    if (strpos($grouped_by, $key2) !== FALSE || $key2 == "total_amount")  {
 
-                    $sql = "INSERT INTO reference_sales_step
-                    (
-                     sale_type,
-                     query,
-                     step,
-                     sub_step,
-                     group_by,
-                     " . implode(', ', $new_key_list) . "
-                    )
-                    VALUES " . implode("," , $array_list) ;
+                                         if ($value2) {
+                                           $arr2 = array(
+                                              $key2 => $value2
+                                           );
+                                           $arr = array_merge($arr, $arr2);
+                                         } // if
+                                    } // if strpos
+                                }
+                                $sales_list[$sub_step][] = $arr;
+                        } else  $sales_list[$sub_step] = $row_sales['total_amount'];
 
-                    $stmt = $conn_pdo->prepare($sql);
-                    $stmt->execute();
-               }
+                    } // data sales
 
-               $sub_step++;
-           } // foreach end
+              } // foreach data
 
-         } // if sub query list
+              $sql = "SELECT DISTINCT group_by
+              FROM reference_sales_step as a
+              INNER JOIN reference_source_list as b
+                    ON a.query = b.source_id
+              WHERe 1=1
+                    AND sale_type = '$this->source_type'
+                    AND is_absolute = 0
+                    AND is_single_query = 1
+                    AND group_by != ''
+              ";
+              $data_group = $this->querySelect($sql);
+              foreach ($data_group as $row_group) {
+                 $group_by = "GROUP BY " . $row_group['group_by'] ;
+              }
 
-       } // end if data
+              $sql = "SELECT *
+              FROM reference_sales_step as a
+              INNER JOIN reference_source_list as b
+                    ON a.query = b.source_id
+              WHERe 1=1
+                    AND sale_type = '$this->source_type'
+                    AND is_absolute = 0
+                    AND is_single_query = 1
+              $group_by
+              ";
 
-       return true;
+              $data_md = $this->querySelect($sql);
+              foreach ($data_md as $row) {
 
-    } catch (\Exception $e) {
-      throw new Exception("Connection failed: ". $e->getMessage());
+                      foreach ($sales_list[1] as $key => $value) {
+                        foreach ($value as $key2 => $value2) {
+                           echo $key2 . " || " . $value2;
+                           echo "<br>";
+                        }
+                      }
+
+                      // echo $row['md_code'] . " || " . $sales_1;
+                      // echo "<br>";
+
+              } // foreach data md
+              echo "<hr>";
+              echo "<pre>";
+              echo print_r($sales_list);
+              echo "</pre>";
+
+              return $syntax_to_perform ;
+      } else return '<br><center><div class="alert alert-danger" role="alert">INVALID COMBINATION OF GROUPED SALES!</div></center>';
+
+
+    } catch (PDOException $e) {
+        throw new Exception("Connection failed: ". $e->getMessage());
     }
-
   }
+
+  // NOTE: DELETE IF NOT WILL BE USED
+  // public function getSubSetSales($query_placement, $sql_statement)
+  // {
+  //   global $conn_pdo;
+  //   try {
+  //
+  //     $sql = "SELECT DISTINCT source_name
+  //     FROM reference_source_list
+  //     WHERE 1=1
+  //            AND upload_status = 1 ";
+  //      $source_data = $this->querySelect($sql);
+  //      if ($source_data) {
+  //
+  //        foreach ($source_data as $source_row) {
+  //           $source_name = $source_row['source_name'];
+  //
+  //           if (strpos($sql_statement, $source_name) !== FALSE) {
+  //
+  //              $sub_query_list[] = $source_name;
+  //              $sql_statement = str_replace($source_name,"" , $sql_statement);
+  //
+  //           }
+  //
+  //        }
+  //
+  //        if ($sub_query_list) {
+  //
+  //          $sub_step = 1;
+  //          foreach ($sub_query_list as $query) {
+  //              $key_list = array(); $array_list = array();
+  //              $sql = "SELECT full_query
+  //              FROM reference_source_list
+  //              WHERE 1=1
+  //                    AND source_name LIKE ?
+  //              GROUP BY source_id ";
+  //              $stmt = $conn_pdo->prepare($sql);
+  //              $stmt->execute([$query . "%"]);
+  //              $data_query = $stmt->fetchAll(PDO::FETCH_ASSOC);
+  //
+  //                foreach ($data_query as $row_query) {
+  //                   $equivalent_query = $row_query['full_query'] ;
+  //                } // foreach row
+  //
+  //              $group_query = explode("GROUP BY", $equivalent_query);
+  //              $group_by = $group_query[1];
+  //
+  //              $data = $this->querySelect($equivalent_query) ;
+  //              if ($data) {
+  //                  foreach ($data as $key => $row) {
+  //
+  //                    foreach ($row as $key2 => $value) {
+  //
+  //                        $key_values[$key2][] = $value;
+  //                        $key_list[] = $key2;
+  //                    }  // foreach 2
+  //
+  //                  } // foreach 1
+  //
+  //                  $sql = "DELETE FROM reference_sales_step
+  //                  WHERE 1=1
+  //                        AND step = '" . str_replace("q", "", $query_placement) . "'
+  //                        AND sub_step = '" . str_replace("q", "", $query_placement) . ".$sub_step'
+  //                   ";
+  //                  $stmt = $conn_pdo->prepare($sql);
+  //                  $stmt->execute();
+  //
+  //                  $key_list = array_unique($key_list);
+  //                  for ($i=0; $i <= count($key_values[$list]) ; $i++) {
+  //                    $data_set = "( '$this->source_type',
+  //                                  '" . $equivalent_query . "',
+  //                                  '" . str_replace("q", "", $query_placement) . "',
+  //                                  '" . str_replace("q", "", $query_placement) . ".$sub_step',
+  //                                  '$group_by' " ;
+  //                    $c = 0;
+  //
+  //                    foreach ($key_list as $list) {
+  //                        if ($key_values[$list][$i]) {
+  //                          $data_set .= ", '" . $key_values[$list][$i] . "' ";
+  //                          $c++;
+  //                        }
+  //                    }
+  //                    $data_set .= ")";
+  //                    if ($c >= 1) {
+  //                      $array_list[] = $data_set ;
+  //                    }
+  //                  }
+  //
+  //                  $new_key_list = array();
+  //                  foreach ($key_list as $key) {
+  //                     $key = strtoupper($key);
+  //                     if (strpos($key, "SUM") !== FALSE) {
+  //                             $k = str_replace("SUM(", "", $key);
+  //                             $k = str_replace(")", "", $k);
+  //                             $new_key_list[] = $k;
+  //                     } else  $new_key_list[] = $key;
+  //                  }
+  //
+  //                   $sql = "INSERT INTO reference_sales_step
+  //                   (
+  //                    sale_type,
+  //                    query,
+  //                    step,
+  //                    sub_step,
+  //                    group_by,
+  //                    " . implode(', ', $new_key_list) . "
+  //                   )
+  //                   VALUES " . implode("," , $array_list) ;
+  //
+  //                   $stmt = $conn_pdo->prepare($sql);
+  //                   $stmt->execute();
+  //              }
+  //
+  //              $sub_step++;
+  //          } // foreach end
+  //
+  //        } // if sub query list
+  //
+  //      } // end if data
+  //
+  //      return true;
+  //
+  //   } catch (\Exception $e) {
+  //     throw new Exception("Connection failed: ". $e->getMessage());
+  //   }
+  //
+  // }
 
   //NOTE:: ADDED IN STEP 4
   //NOTE:: ADDED STEP 4
