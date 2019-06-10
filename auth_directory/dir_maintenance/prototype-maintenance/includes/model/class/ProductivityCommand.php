@@ -639,22 +639,31 @@ trait ProductivityCommand
         $k = 0; $group_list = array();
         $data = $this->querySelect($sql);
         foreach ($data as $row) {
-            $group_list[] = $row['group_by'] ;
-            $k++;
+            if ($row['group_by']) {
+              $group_list[] = $row['group_by'] ;
+              $k++;
+            }
         } // foreach
 
-        for ($i=0; $i < $k ; $i++) {
+        if (count($group_list) > 1) {
 
-          $grouping = $group_list;
-          $current_group = $grouping[$i];
-          unset($grouping[$i]);
+            for ($i=0; $i < $k ; $i++) {
 
-          foreach ($grouping as $group) {
-            if (strpos($group, $current_group) !== FALSE) {
-                $perform_query++;
+              $grouping = $group_list;
+              $current_group = $grouping[$i];
+              unset($grouping[$i]);
+
+              foreach ($grouping as $group) {
+                if (strpos($group, $current_group) !== FALSE) {
+                    $perform_query++;
+                }
+              }
             }
-          }
-        }
+
+        } elseif (count($group_list) == 1) {
+                     $perform_query++;
+        } 
+
         return $perform_query;
 
       } catch (PDOException $e) {

@@ -573,7 +573,6 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                   }
 
             }
-            // $this->computeSources($this->$source_type, $pseudo_syntax) ;
 
         } else { // NOTE:::: NO FORMULA IS USED
               $this->translateQuery("q1", $this->source );
@@ -590,22 +589,8 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
     }
   }
 
-  public function computeSources($source_type, $pseudo_syntax)
-  {
-    global $conn_pdo;
-    try {
-      echo $source_type . " " ;
-      echo print_r($pseudo_syntax);
-      return true;
-
-    } catch (PDOException $e) {
-        throw new Exception("Connection failed: ". $e->getMessage());
-    }
-  }
-
   //NOTE:: ADDED IN STEP 4
   //NOTE:: ADDED IN STEP 4
-
 
   public function translateQuery($query_placement, $query)
   {
@@ -703,7 +688,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
         //
         // } while ($continue >= 1);
 
-        // $this->getSetSales($query_placement, $source_equivalent) ;
+        // $this->getSetSa2les($query_placement, $source_equivalent) ;
         // $this->getSubSetSales($query_placement, $equivalent_query);
 
     } // if data query
@@ -733,8 +718,9 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
 
           $sql = "DELETE FROM reference_sales_step
           WHERE 1=1
-                AND step = '" . str_replace("q", "", $query_placement) . "'
-                AND sub_step = '" .  $sub_query_placement . "'
+                AND sale_type = '$this->source_type'
+                -- AND step = '" . str_replace("q", "", $query_placement) . "'
+                -- AND sub_step = '" .  $sub_query_placement . "'
           ";
           $stmt = $conn_pdo->prepare($sql);
           $stmt->execute();
@@ -868,73 +854,69 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
 
                         if ($grouped_by) {
                                 $arr = array();
+                                $group_code = array();
                                 foreach ($row_sales as $key2 => $value2) {
-                                    // echo $key2 . " || " . $value2;
-                                    // echo "<br>";
-
-                                    if (strpos($grouped_by, $key2) !== FALSE || $key2 == "total_amount")  {
-
+                                    if (strpos($grouped_by, $key2) !== FALSE ) { // if strpos
                                          if ($value2) {
                                            $arr2 = array(
                                               $key2 => $value2
                                            );
                                            $arr = array_merge($arr, $arr2);
+
                                          } // if
-                                    } // if strpos
+                                         $group_code[] = $value2;
+
+                                    } elseif ($key2 == "total_amount") {
+                                          if ($value2) {
+                                            $arr2 = array(
+                                               $key2 => $value2
+                                            );
+                                            $arr = array_merge($arr, $arr2);
+                                          } // if
+                                    }
+                                } // foreach row sales
+
+                                if ($group_code && implode("-",$group_code)) {
+                                      $group_code = array_unique($group_code);
+                                      $group_list[] = implode("-",$group_code);
+                                      $sales_list[$sub_step][implode("-",$group_code)][] = $arr;
                                 }
-                                $sales_list[$sub_step][] = $arr;
-                        } else  $sales_list[$sub_step] = $row_sales['total_amount'];
+
+                        } else  $sales_list[$sub_step] = "**" . $row_sales['total_amount'];
 
                     } // data sales
 
               } // foreach data
 
-              $sql = "SELECT DISTINCT group_by
-              FROM reference_sales_step as a
-              INNER JOIN reference_source_list as b
-                    ON a.query = b.source_id
-              WHERe 1=1
-                    AND sale_type = '$this->source_type'
-                    AND is_absolute = 0
-                    AND is_single_query = 1
-                    AND group_by != ''
-              ";
-              $data_group = $this->querySelect($sql);
-              foreach ($data_group as $row_group) {
-                 $group_by = "GROUP BY " . $row_group['group_by'] ;
-              }
+              // $syntax_to_perform = "(" . $syntax_to_perform . ") / q3";
+              // $sales_list[3] = '**333';
 
-              $sql = "SELECT *
-              FROM reference_sales_step as a
-              INNER JOIN reference_source_list as b
-                    ON a.query = b.source_id
-              WHERe 1=1
-                    AND sale_type = '$this->source_type'
-                    AND is_absolute = 0
-                    AND is_single_query = 1
-              $group_by
-              ";
+              echo $syntax_to_perform;
+              echo "<br><br>";
 
-              $data_md = $this->querySelect($sql);
-              foreach ($data_md as $row) {
+              $group_list = array_unique($group_list);
+              foreach ($group_list as $list) {
 
-                      foreach ($sales_list[1] as $key => $value) {
-                        foreach ($value as $key2 => $value2) {
-                           echo $key2 . " || " . $value2;
-                           echo "<br>";
-                        }
-                      }
+                  $sales = array();
+                  $formula = $syntax_to_perform;
+                  for ($i=1; $i <= substr_count($syntax_to_perform, "q") ; $i++) {
+                      if (is_string($sales_list[$i]) && strpos($sales_list[$i], "**") !== FALSE) { // absolute value
+                              $sales[$i] = str_replace("**", "", $sales_list[$i]);
+                      } else  $sales[$i] = $sales_list[$i][$list][0]['total_amount'];
 
-                      // echo $row['md_code'] . " || " . $sales_1;
-                      // echo "<br>";
+                      $formula = str_replace("q". $i, $sales[$i], $formula);
+                  } // for i
 
-              } // foreach data md
-              echo "<hr>";
-              echo "<pre>";
-              echo print_r($sales_list);
-              echo "</pre>";
+                  $result = $this->calculate($formula);
 
-              return $syntax_to_perform ;
+                  echo $formula . "||" . $result;
+                  // echo print_r($sales);
+                  echo "<br>";
+                  // echo "$result <br>";
+
+              } // foreach group list
+
+             return $syntax_to_perform ;
       } else return '<br><center><div class="alert alert-danger" role="alert">INVALID COMBINATION OF GROUPED SALES!</div></center>';
 
 
