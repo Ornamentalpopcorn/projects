@@ -632,6 +632,7 @@ trait ProductivityCommand
               ON a.source_id = b.query
         WHERE 1=1
               AND is_absolute = 0
+              AND is_override = 0
               AND b.sale_type = '$this->source_type'
         GROUP BY query
         ";
@@ -662,7 +663,7 @@ trait ProductivityCommand
 
         } elseif (count($group_list) == 1) {
                      $perform_query++;
-        } 
+        }
 
         return $perform_query;
 

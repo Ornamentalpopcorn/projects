@@ -526,57 +526,65 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
   {
     global $conn_pdo;
     try {
+        $syntax_to_perform = $this->translateQuery("q1", $this->source );
 
-        $c = 1; $pseudo_syntax = array(); $counter = 1;
-        if (strpos($this->source , "::") !== FALSE) {
-
-            foreach (explode("::", $this->source) as $source_sql) {
-                  $source_sql = trim($source_sql);
-
-                  if ($source_sql[0] == "x" || $source_sql[0] == "*" || $source_sql[0] == "/" || $source_sql[0] == "+" || $source_sql[0] == "-") {
-                    $operator = $source_sql[0];
-                  }
-
-                  if ($source_sql[0] == "x")     $query_list[] = ltrim($source_sql, "x");
-                  elseif ($source_sql[0] == "+") $query_list[] = ltrim($source_sql, "+");
-                  elseif ($source_sql[0] == "*") $query_list[] = ltrim($source_sql, "*");
-                  elseif ($source_sql[0] == "-") $query_list[] = ltrim($source_sql, "-");
-                  elseif ($source_sql[0] == "/") $query_list[] = ltrim($source_sql, "/");
-                  else {
-                    $query_list[] = $source_sql;
-                    $operator = "";
-                  }
-
-                  // PREPARE COMPUTATION FORMULA SYNTAX
-                  $data_source_list[] = $data_source = $this->getSourceName($source_sql);
-                  $pseudo_syntax[] = str_replace( $data_source , "q" . $counter++ , $source_sql) ;
-
-                  if ($operator) {
-                    $operator_list[] = $operator;
-                    $c = 0;
-                    $query_placement = 0;
-                    $query_syntax = "";
-                    foreach ($query_list as $query) {
-                        ++$query_placement;
-
-                        if (array_key_exists($c, $operator_list)) {
-                               $operator = $operator_list[$c];
-                        } else $operator = "";
-
-                        if ($c == 0) {
-                               $query_syntax .= $query . " " . $operator;
-                        } else $query_syntax .= $operator . " " . $query;
-
-                        $this->translateQuery($query_placement, $data_source_list[$c]);
-                        $c++;
-                    }
-                  }
-
-            }
-
-        } else { // NOTE:::: NO FORMULA IS USED
-              $this->translateQuery("q1", $this->source );
+        if (strpos($syntax_to_perform, "INVALID") !== FALSE) { // if syntax is correct, perform query
+          return '<br><center><div class="alert alert-danger" role="alert">INVALID COMBINATION OF GROUPED SALES</div></center>';
+        } elseif ($syntax_to_perform) {
+          $this->performComputation($syntax_to_perform);
+        } else {
+          return '<br><center><div class="alert alert-danger" role="alert">PLEASE CHECK QUERY COMBINATION AND/OR QUERY SYNTAX</div></center>';
         }
+        // $c = 1; $pseudo_syntax = array(); $counter = 1;
+        // if (strpos($this->source , "::") !== FALSE) {
+        //
+        //     foreach (explode("::", $this->source) as $source_sql) {
+        //           $source_sql = trim($source_sql);
+        //
+        //           if ($source_sql[0] == "x" || $source_sql[0] == "*" || $source_sql[0] == "/" || $source_sql[0] == "+" || $source_sql[0] == "-") {
+        //             $operator = $source_sql[0];
+        //           }
+        //
+        //           if ($source_sql[0] == "x")     $query_list[] = ltrim($source_sql, "x");
+        //           elseif ($source_sql[0] == "+") $query_list[] = ltrim($source_sql, "+");
+        //           elseif ($source_sql[0] == "*") $query_list[] = ltrim($source_sql, "*");
+        //           elseif ($source_sql[0] == "-") $query_list[] = ltrim($source_sql, "-");
+        //           elseif ($source_sql[0] == "/") $query_list[] = ltrim($source_sql, "/");
+        //           else {
+        //             $query_list[] = $source_sql;
+        //             $operator = "";
+        //           }
+        //
+        //           // PREPARE COMPUTATION FORMULA SYNTAX
+        //           $data_source_list[] = $data_source = $this->getSourceName($source_sql);
+        //           $pseudo_syntax[] = str_replace( $data_source , "q" . $counter++ , $source_sql) ;
+        //
+        //           if ($operator) {
+        //             $operator_list[] = $operator;
+        //             $c = 0;
+        //             $query_placement = 0;
+        //             $query_syntax = "";
+        //             foreach ($query_list as $query) {
+        //                 ++$query_placement;
+        //
+        //                 if (array_key_exists($c, $operator_list)) {
+        //                        $operator = $operator_list[$c];
+        //                 } else $operator = "";
+        //
+        //                 if ($c == 0) {
+        //                        $query_syntax .= $query . " " . $operator;
+        //                 } else $query_syntax .= $operator . " " . $query;
+        //
+        //                 $this->translateQuery($query_placement, $data_source_list[$c]);
+        //                 $c++;
+        //             }
+        //           }
+        //
+        //     }
+        //
+        // } else { // NOTE:::: NO FORMULA IS USED
+        //       $this->translateQuery("q1", $this->source );
+        // }
         // echo print_r($pseudo_syntax);
 
         // echo print_r($operator_list);
@@ -596,9 +604,10 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
   {
     global $conn_pdo;
     try {
-
+    $syntax_to_perform = "";
     $query = str_replace("[[", "", $query);
     $query = str_replace("]]", "", $query);
+
     $sql = "SELECT source_equivalent, full_query, is_single_query
     FROM reference_source_list
     WHERE 1=1
@@ -642,58 +651,17 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                            $syntax_to_perform = substr_replace($syntax_to_perform, "**q" . $sub_query_placement, $position, strlen($source_id));
                     } else $syntax_to_perform = substr_replace($syntax_to_perform, "q" . $sub_query_placement, $position, strlen($source_id));
                     $sub_query_placement++;
-                    // }
+
                 }
 
             } // foreach
 
         }
-
-        echo $result = $this->performComputation($syntax_to_perform);
-        // echo "$source_equivalent <br><br>";
-        // echo $syntax_to_perform ;
-        // echo "<br><br>";
-        // $f = "((((((100 - 99) * .2) / 5) - 3) + 100) / .3) + 72.1";
-        // $result = $this->calculate($f);
-        // echo $result;
-
-
-        // do {
-        //   $sql = "SELECT source_id, full_query
-        //   FROM reference_source_list
-        //   WHERE 1=1
-        //   GROUP BY source_id ";
-        //
-        //   $data_2 = $this->querySelect($sql);
-        //   foreach ($data_2 as $row_2) {
-        //       $source_id = $row_2['source_id'] ;
-        //
-        //       if (strpos($new_source, $source_id) !== FALSE) {
-        //             // echo $new_source . "||" . $source_id;
-        //             // echo "<br><br>";
-        //
-        //             $pos = strpos($new_source, $source_id);
-        //             // $new_source = str_replace($source_id, "removed", $new_source);
-        //             $new_source = substr_replace($new_source, "<span style='color:red'>removed</span>", $pos, strlen($source_id));
-        //
-        //       }
-        //
-        //   } // foreach
-        //
-        //   $i++;
-        //
-        //   if ($i == 6) {
-        //     $continue = 0;
-        //   }
-        //
-        // } while ($continue >= 1);
-
-        // $this->getSetSa2les($query_placement, $source_equivalent) ;
-        // $this->getSubSetSales($query_placement, $equivalent_query);
+        // echo $result = $this->performComputation($syntax_to_perform);
 
     } // if data query
 
-    return true;
+    return $syntax_to_perform;
 
     } catch (PDOException $e) {
         throw new Exception("Connection failed: ". $e->getMessage());
@@ -716,14 +684,17 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
       $data = $this->querySelect($sql_statement) ;
       if ($data) {
 
-          $sql = "DELETE FROM reference_sales_step
-          WHERE 1=1
-                AND sale_type = '$this->source_type'
-                -- AND step = '" . str_replace("q", "", $query_placement) . "'
-                -- AND sub_step = '" .  $sub_query_placement . "'
-          ";
-          $stmt = $conn_pdo->prepare($sql);
-          $stmt->execute();
+          if ($sub_query_placement == 1) {
+
+              $sql = "DELETE FROM reference_sales_step
+              WHERE 1=1
+                    AND sale_type = '$this->source_type'
+                    -- AND step = '" . str_replace("q", "", $query_placement) . "'
+                    -- AND sub_step = '" .  $sub_query_placement . "'
+              ";
+              $stmt = $conn_pdo->prepare($sql);
+              $stmt->execute();
+          }
 
           foreach ($data as $key => $row) {
             foreach ($row as $key2 => $value) {
@@ -835,6 +806,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
               FROM reference_sales_step
               WHERe 1=1
                     AND sale_type = '$this->source_type'
+                    AND is_override = 0
               GROUP BY sub_step
               ";
               $data = $this->querySelect($sql);
@@ -847,6 +819,8 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                     WHERE 1=1
                          AND sale_type = '$this->source_type'
                          AND sub_step = '$sub_step'
+                         AND is_override = 0
+
                     ";
                     $data_sales = $this->querySelect($sql) ;
 
@@ -856,24 +830,47 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                                 $arr = array();
                                 $group_code = array();
                                 foreach ($row_sales as $key2 => $value2) {
-                                    if (strpos($grouped_by, $key2) !== FALSE ) { // if strpos
-                                         if ($value2) {
-                                           $arr2 = array(
-                                              $key2 => $value2
-                                           );
-                                           $arr = array_merge($arr, $arr2);
 
-                                         } // if
+                                  if ($key2 == "md_code" ||
+                                      $key2 == "md_name" ||
+                                      $key2 == "class" ||
+                                      $key2 == "lba_rebate_code" ||
+                                      $key2 == "branch_code" ||
+                                      $key2 == "product_code" ||
+                                      $key2 == "segment_code" ||
+                                      $key2 == "crediting_date" ||
+                                      $key2 == "total_amount"   ) {
+                                      if ($value2) {
+                                        $arr2 = array(
+                                          $key2 => $value2
+                                        );
+                                        $arr = array_merge($arr, $arr2);
+                                      } // if
+                                  }
+
+                                   if (strpos($grouped_by, $key2) !== FALSE ) { // if strpos
                                          $group_code[] = $value2;
+                                   }
+                                    // if (strpos($grouped_by, $key2) !== FALSE ) { // if strpos
+                                    //      if ($value2) {
+                                    //        $arr2 = array(
+                                    //           $key2 => $value2
+                                    //        );
+                                    //        $arr = array_merge($arr, $arr2);
+                                    //
+                                    //      } // if
+                                    //      $group_code[] = $value2;
+                                    //
+                                    // } else {
+                                    // // } elseif ($key2 == "total_amount") {
+                                    //       if ($value2) {
+                                    //         $arr2 = array(
+                                    //            $key2 => $value2
+                                    //         );
+                                    //         $arr = array_merge($arr, $arr2);
+                                    //       } // if
+                                    // }
 
-                                    } elseif ($key2 == "total_amount") {
-                                          if ($value2) {
-                                            $arr2 = array(
-                                               $key2 => $value2
-                                            );
-                                            $arr = array_merge($arr, $arr2);
-                                          } // if
-                                    }
                                 } // foreach row sales
 
                                 if ($group_code && implode("-",$group_code)) {
@@ -888,33 +885,70 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
 
               } // foreach data
 
-              // $syntax_to_perform = "(" . $syntax_to_perform . ") / q3";
-              // $sales_list[3] = '**333';
+              foreach ($arr as $key => $value) {
+                  $column_list[] = $key;
+                  $column_list_insert[] = ":" . $key;
+              }
 
-              echo $syntax_to_perform;
-              echo "<br><br>";
+              $sql = "DELETE FROM reference_sales_source
+              WHERE 1=1
+                    AND sale_type = '$this->source_type'
+                    AND upload_status = 0
+                     ";
+              $stmt = $conn_pdo->prepare($sql);
+              $stmt->execute();
+
+              $sql = "INSERT INTO reference_sales_source
+                      (
+                        sale_type,
+                        query,
+                        " . implode(", ", $column_list) . "
+                      )
+                      VALUES
+                      (
+                        :sale_type,
+                        :query,
+                        " . implode(", ", $column_list_insert) . "
+                      )
+                      " ;
+              $stmt_insert = $conn_pdo->prepare($sql);
 
               $group_list = array_unique($group_list);
+              $conn_pdo->beginTransaction();
               foreach ($group_list as $list) {
 
-                  $sales = array();
                   $formula = $syntax_to_perform;
                   for ($i=1; $i <= substr_count($syntax_to_perform, "q") ; $i++) {
                       if (is_string($sales_list[$i]) && strpos($sales_list[$i], "**") !== FALSE) { // absolute value
-                              $sales[$i] = str_replace("**", "", $sales_list[$i]);
-                      } else  $sales[$i] = $sales_list[$i][$list][0]['total_amount'];
+                              $sales = $sales_list[$i];
+                      } elseif ($sales_list[$i][$list][0]['total_amount']) {
+                              $sales = $sales_list[$i][$list][0]['total_amount'];
+                      } else  $sales = 0;
 
-                      $formula = str_replace("q". $i, $sales[$i], $formula);
+                      if ($sales[0] == ".")  $sales = "0" . $sales;
+
+                      $formula = str_replace("q". $i, $sales, $formula);
                   } // for i
 
-                  $result = $this->calculate($formula);
+                  if (strpos(trim($syntax_to_perform), " ") !== FALSE) {
+                    $formula = str_replace("**", "", $formula);
+                    $result = $this->calculate($formula);
+                  } $result = $sales;
 
-                  echo $formula . "||" . $result;
-                  // echo print_r($sales);
-                  echo "<br>";
-                  // echo "$result <br>";
+                  foreach ($sales_list[1][$list] as $key => $value) {
+                     $stmt_insert->bindValue(":sale_type" , $this->source_type, PDO::PARAM_STR);
+                     $stmt_insert->bindValue(":query" , $this->source, PDO::PARAM_STR);
+                     foreach ($value as $column_name => $column_value) {
+                        if ($column_name == "total_amount") {
+                               $stmt_insert->bindValue(":" . $column_name, $result, PDO::PARAM_STR);
+                        } else $stmt_insert->bindValue(":" . $column_name, $column_value, PDO::PARAM_STR);
+                        // echo $column_name . " $column_value <br>";
+                     }
+                     $stmt_insert->execute();
+                  }
 
               } // foreach group list
+              $conn_pdo->commit();
 
              return $syntax_to_perform ;
       } else return '<br><center><div class="alert alert-danger" role="alert">INVALID COMBINATION OF GROUPED SALES!</div></center>';

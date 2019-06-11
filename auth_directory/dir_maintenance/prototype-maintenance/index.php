@@ -60,7 +60,10 @@
 
   // echo $actual_link = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'];
   $f = "(2-1)*5/2";
+  // $f = "((((((35426.25 - 2386764737.9) * 0.2) / 5) - ) + 100) / 0.3) + 35426.25";
+  // echo $f . "<br>br>" ;
   $result = $stringCalc->calculate($f);
+  // exit();
 
 ?>
 <!DOCTYPE html>
