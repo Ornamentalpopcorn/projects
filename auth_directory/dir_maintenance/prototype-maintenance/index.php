@@ -816,8 +816,10 @@ $(document).ready(function(){
   $(document).on('click', '#data-apply', function (e) {
         var sql = $("#queryText-editreport").val().trim()
         var sourceType = $("#editApplySource").text()
+        var date = $("#date").val()
+        var lba_rebate = $("#lba-rebate").val().trim()
 
-        if (sql) {
+        if (sql && date && lba_rebate) {
 
             if (confirm('Apply To Report ?') ) {
 
@@ -830,7 +832,9 @@ $(document).ready(function(){
                   action: action,
                   key: key,
                   sourcetype: sourceType,
-                  sql: sql
+                  sql: sql,
+                  date: date,
+                  lba: lba_rebate
                 },
                 cache: false,
                 beforeSend: function() {
@@ -846,7 +850,7 @@ $(document).ready(function(){
                     if (data == 1) {
                       $("#reportResultInfo").html('<br><center><div class="alert alert-success" role="alert">Sucessfully Applied To Report</div></center>')
                       alert('Successfully applied changes to report!')
-                      $("#applyToReportResult").html("<br><br> &gt; <u><a target='_blank' href='https://www.bellkenz.com/dev-smpp/auth_directory/dir_productivity/productivity_report.php'>VIEW APPLIED CHANGES</a></u>")
+                      $("#applyToReportResult").html("<br><br> &gt; <u><a target='_blank' href='./sales_report.php'>VIEW APPLIED CHANGES</a></u>")
                     }
 
                     setTimeout(function() {

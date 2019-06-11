@@ -20,7 +20,7 @@ interface ProductivityInterface extends ProductivityCommandInterface
     public function applyToReport();
 
     // STEP 4
-    public function translateQuery($query_placement, $sql); 
+    public function translateQuery($query_placement, $sql);
     public function getSetSales($query_placement, $sub_query_placement, $source_id, $sql);
     public function performComputation($syntax_to_perform);
 

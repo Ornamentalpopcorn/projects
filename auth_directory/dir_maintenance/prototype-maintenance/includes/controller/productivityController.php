@@ -126,7 +126,12 @@ if (isset($_POST['key'])) {
                   $obj = new Productivity();
                   $obj->source_type = $_POST['sourcetype'];
                   $obj->source = $_POST['sql'];
-                  $result = $obj->applyToReport();
+                  $obj->crediting_date = $_POST['date'] . "-01";
+
+                  foreach (explode("," , $_POST['lba']) as $lba_rebate_code) {
+                    $obj->lba_rebate_code = $lba_rebate_code;
+                    $result = $obj->applyToReport();
+                  }
 
             } elseif ($_POST['action'] == "edit sales source") {
                   $obj = new Productivity();

@@ -7,7 +7,8 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
   WILL BE USUALLY GENERAL STUFF LIKE DISPLAYING INFORMATION
   THAT HAS LESS CONCERN IN COMPUTATION
   */
-  public $crediting_date = "2018-01-01";
+  public $crediting_date;
+  public $lba_rebate_code;
   public $data_value;
   public $id;
   public $data_id;
@@ -526,12 +527,13 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
   {
     global $conn_pdo;
     try {
+
         $syntax_to_perform = $this->translateQuery("q1", $this->source );
 
         if (strpos($syntax_to_perform, "INVALID") !== FALSE) { // if syntax is correct, perform query
           return '<br><center><div class="alert alert-danger" role="alert">INVALID COMBINATION OF GROUPED SALES</div></center>';
         } elseif ($syntax_to_perform) {
-          $this->performComputation($syntax_to_perform);
+          return $this->performComputation($syntax_to_perform);
         } else {
           return '<br><center><div class="alert alert-danger" role="alert">PLEASE CHECK QUERY COMBINATION AND/OR QUERY SYNTAX</div></center>';
         }
@@ -590,7 +592,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
         // echo print_r($operator_list);
         // echo print_r($query_list);
 
-        return 'end';
+        return 'here!!!';
 
     } catch (PDOException $e) {
         throw new Exception("Connection failed: ". $e->getMessage());
@@ -607,6 +609,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
     $syntax_to_perform = "";
     $query = str_replace("[[", "", $query);
     $query = str_replace("]]", "", $query);
+
 
     $sql = "SELECT source_equivalent, full_query, is_single_query
     FROM reference_source_list
@@ -645,6 +648,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
                     // **SET VALUE = GROUP OF VALUES EX. MD 1 SALES, MD 2 SALES ETC.....
                     // ABSOLUTE VALUE = SINGLE VALUE EX. TOTAL MDC SALES
 
+
                     $position = strpos($syntax_to_perform, $source_id);
                     $is_absolute_value = $this->getSetSales($query_placement, $sub_query_placement, $source_id, $sql_statement) ;
                     if ($is_absolute_value) {
@@ -679,7 +683,13 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
              $group_by = $group_query[1];
              $group_by = trim(str_replace("LIMIT 10", "", $group_by) );
              $absolute_value = 0;
-      } else $absolute_value = 1;;
+      } else $absolute_value = 1;
+
+      $add_sql = explode("1=1", $sql_statement);
+      $sql_statement = $add_sql[0] . " 1=1
+            AND crediting_date = '$this->crediting_date'
+            AND lba_rebate_code = '$this->lba_rebate_code' " . $add_sql[1] ;
+
 
       $data = $this->querySelect($sql_statement) ;
       if ($data) {
@@ -802,7 +812,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
               $sales_list = array();
               $group_list = array() ;
 
-              $sql = "SELECT sub_step, group_by
+              $sql = "SELECT sub_step, group_by, query
               FROM reference_sales_step
               WHERe 1=1
                     AND sale_type = '$this->source_type'
@@ -812,6 +822,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
               $data = $this->querySelect($sql);
               foreach ($data as $row) {
                    $sub_step = $row['sub_step'] ;
+                   $query = $row['query'] ;
                    $grouped_by = $row['group_by'] ;
 
                     $sql = "SELECT *
@@ -937,7 +948,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
 
                   foreach ($sales_list[1][$list] as $key => $value) {
                      $stmt_insert->bindValue(":sale_type" , $this->source_type, PDO::PARAM_STR);
-                     $stmt_insert->bindValue(":query" , $this->source, PDO::PARAM_STR);
+                     $stmt_insert->bindValue(":query" , $query, PDO::PARAM_STR);
                      foreach ($value as $column_name => $column_value) {
                         if ($column_name == "total_amount") {
                                $stmt_insert->bindValue(":" . $column_name, $result, PDO::PARAM_STR);
@@ -950,7 +961,7 @@ class Productivity extends ChrisKonnertz\StringCalc\StringCalc implements Produc
               } // foreach group list
               $conn_pdo->commit();
 
-             return $syntax_to_perform ;
+             return 1 ;
       } else return '<br><center><div class="alert alert-danger" role="alert">INVALID COMBINATION OF GROUPED SALES!</div></center>';
 
 

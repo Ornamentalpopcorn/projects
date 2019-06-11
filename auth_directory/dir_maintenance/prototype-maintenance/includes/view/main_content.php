@@ -137,10 +137,21 @@
 
                   </div>
 
-                  <div class="col-md-6">
-                    <br>
+                  <div class="col-md-3">
+                    <label for="date">LBA REBATE</label>
 
-                    <textarea id='queryText-editreport' style="margin-top: 0px;" placeholder='Type Data Source Name/Query Here...' name='queryText' class='form-control' rows='6' cols='120'></textarea>
+                  <input type="month" class="form-control" name="date" value="" id="date">
+                  </div>
+
+                  <div class="col-md-3">
+                    <label for="date">LBA REBATE CODE</label>
+
+                  <input type="text" class="form-control" name="lba" placeholder="If multiple LBA. ex. 400,2600..."value="" id="lba-rebate">
+                  </div>
+
+                  <div class="col-md-6">
+
+                    <textarea id='queryText-editreport' style="margin-top: 0pxx;" placeholder='Type Data Source Name/Query Here...' name='queryText' class='form-control' rows='6' cols='120'></textarea>
                     <a href='#' id='data-apply' class='btn btn-primary btn btn-xs' style='margin:3px; float:right;'><i class='fas fa-marker'></i></i> APPLY TO REPORT</a>
 
                     <div id="reportResultInfo"></div>
