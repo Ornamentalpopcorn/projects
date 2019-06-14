@@ -135,7 +135,7 @@ foreach ($dir_list as $dir ) {
         <a href="https://www.bellkenz.com/dev-smpp/auth_directory/dir_productivity/productivity_report.php"><i class="far fa-chart-bar"></i> <span> Productivity</span><span class="pull-right-container"></span></a>
       </li>
       <li>
-        <a href="https://www.bellkenz.com/dev-smpp/auth_directory/dir_maintenance/prototype/"><i class="fas fa-robot"></i> <span> Productivity Maintenance <br>Prototype</span><span class="pull-right-container"></span></a>
+        <a href="https://www.bellkenz.com/dev-smpp/auth_directory/dir_maintenance/prototype-maintenance/"><i class="fas fa-robot"></i> <span> Productivity Maintenance <br>Prototype</span><span class="pull-right-container"></span></a>
       </li>
 
       <li class="treeview menu-open">

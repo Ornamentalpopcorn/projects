@@ -52,7 +52,14 @@
 
                     $txt = "<br>";
                     $txt .= "<h3>ADD NEW DATA SOURCE</h3>";
+                    $txt .= "<div class='row'>";
+                    $txt .= "<div class='col-md-6'>";
                     $txt .= '<input type="text" id="data-title" class="form-control" name="source-name" value="" required="required" placeholder="Source Title">';
+                    $txt .= "</div>";
+                    $txt .= "<div class='col-md-6'>";
+                    $txt .= '<input type="text" id="source-category" class="form-control" name="source-category" value="" required="required" placeholder="Category...">';
+                    $txt .= "</div>";
+                    $txt .= "</div>";
                     $txt .= "<textarea id='queryText' placeholder='Select SUM(amount), md_code FROM source_table' name='queryText' class='form-control' rows='6' cols='120'></textarea>";
 
 
@@ -138,7 +145,7 @@
                   </div>
 
                   <div class="col-md-3">
-                    <label for="date">LBA REBATE</label>
+                    <label for="date">DATE</label>
 
                   <input type="month" class="form-control" name="date" value="" id="date">
                   </div>
@@ -150,8 +157,8 @@
                   </div>
 
                   <div class="col-md-6">
-
-                    <textarea id='queryText-editreport' style="margin-top: 0pxx;" placeholder='Type Data Source Name/Query Here...' name='queryText' class='form-control' rows='6' cols='120'></textarea>
+                    <label for="query">DATA SOURCE</label>
+                    <textarea id='queryText-editreport' style="margin-top: 0px;" placeholder='Type Data Source Name Here...' name='queryText' class='form-control' rows='6' cols='120'></textarea>
                     <a href='#' id='data-apply' class='btn btn-primary btn btn-xs' style='margin:3px; float:right;'><i class='fas fa-marker'></i></i> APPLY TO REPORT</a>
 
                     <div id="reportResultInfo"></div>

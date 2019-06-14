@@ -630,7 +630,6 @@ $(document).ready(function(){
             return 0
       }
 
-
       var action = "create new source"
       $.ajax({
         type: "POST",
@@ -743,6 +742,7 @@ $(document).ready(function(){
           var dataSourceName = $("#data-title").val().trim()
           var sql = $("#queryText").val().trim()
           var sourceType = $("#sourceType").text()
+          var sourceCategory = $("#source-category").val().trim()
 
           if (confirm('Save Data Source?') ) {
 
@@ -755,6 +755,7 @@ $(document).ready(function(){
                 action: action,
                 key: key,
                 sourcename: dataSourceName,
+                category: sourceCategory,
                 sourcetype: sourceType,
                 sql: sql
               },
@@ -769,8 +770,10 @@ $(document).ready(function(){
                   if (data.includes('Source Successfully Created') ) {
 
                       $("#data-title").val('')
+                      $("#source-category").val('')
                       $("#data-mdcode").val('')
                       $("#queryText").val('')
+
 
                       var action = "display source"
                       $.ajax({
@@ -788,10 +791,13 @@ $(document).ready(function(){
                         },
                         success: function (data) {
                           $("#sourceList-main").html('<center><a href="#" id="addNewSource" class="btn btn-primary btn btn-xs" style="margin-bottom:3px"><i class="fas fa-plus"></i> ADD DATA SOURCE</a></center>' + data); // creation succefull
+                          $("#sourceList-edit").html("<br>" +data);
                         },
                         error: function(err) {
                         }
                       });
+
+
                   }
 
                   $("#data-save").attr("disabled", false)
@@ -848,7 +854,7 @@ $(document).ready(function(){
 
                     $("#reportResultInfo").html(data)
                     if (data == 1) {
-                      $("#reportResultInfo").html('<br><center><div class="alert alert-success" role="alert">Sucessfully Applied To Report</div></center>')
+                      $("#reportResultInfo").html('<br><br><center><div class="alert alert-success" role="alert">Sucessfully Applied To Report</div></center>')
                       alert('Successfully applied changes to report!')
                       $("#applyToReportResult").html("<br><br> &gt; <u><a target='_blank' href='./sales_report.php'>VIEW APPLIED CHANGES</a></u>")
                     }

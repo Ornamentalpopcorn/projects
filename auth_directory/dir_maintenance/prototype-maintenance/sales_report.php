@@ -194,7 +194,9 @@
 
             <div class="box-body">
 
-              <a href="index.php" class="btn btn-primary"><i class="fas fa-arrow-left"></i> GO BACK</a>
+              <a href="index.php" class="btn btn-primary" style="margin-bottom:5px;"><i class="fas fa-arrow-left"></i> GO BACK</a>
+
+
 
               <table border='1' class='table table-striped table-hover display' id='dataTable' style='text-align:center; table-layout:auto;' width='100%' >
                 <thead>
@@ -294,7 +296,8 @@ $(document).ready(function(){
       scrollX:        true,
       scrollY:        '55vh',
       scrollCollapse: true,
-      'paging'      : false,
+      'paging'      : true,
+      "lengthMenu": [ [10, 25, 50, 100], [10, 25, 50, 100 ] ],
       'lengthChange': true,
       'searching'   : true,
       'ordering'    : true,

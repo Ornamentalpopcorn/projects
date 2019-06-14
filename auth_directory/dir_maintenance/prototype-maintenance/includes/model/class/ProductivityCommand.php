@@ -311,6 +311,7 @@ trait ProductivityCommand
     }
   }
 
+
   public function displaySourceInfo()
   {
     global $conn_pdo;
@@ -418,6 +419,7 @@ trait ProductivityCommand
 
                         $sql = "INSERT INTO reference_source_list
                         (
+                          category,
                           source_id,
                           source_name,
                           source_equivalent,
@@ -428,7 +430,7 @@ trait ProductivityCommand
                         )
                         VALUES
                         (
-                          :source_id,
+                          :category,
                           :source_name,
                           :source_equivalent,
                           :full_query,
@@ -453,6 +455,7 @@ trait ProductivityCommand
                                $source_equivalent = $source_id;
                         } else $source_equivalent = $this->filterSourceEquivalent($this->source);
 
+                        $stmt_insert->bindValue(":category" , $this->source_category, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":source_id" , $source_id, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":source_name" , $this->source_title, PDO::PARAM_STR);
                         $stmt_insert->bindValue(":source_equivalent" , $source_equivalent, PDO::PARAM_STR);
@@ -499,6 +502,7 @@ trait ProductivityCommand
 
                           $sql = "INSERT INTO reference_source_list
                           (
+                            category,
                             source_id,
                             source_name,
                             source_equivalent,
@@ -509,6 +513,7 @@ trait ProductivityCommand
                           )
                           VALUES
                           (
+                            :category,
                             :source_id,
                             :source_name,
                             :source_equivalent,
@@ -529,6 +534,7 @@ trait ProductivityCommand
                                  $source_equivalent = $source_id;
                           } else $source_equivalent = $this->filterSourceEquivalent($this->source);
 
+                          $stmt_insert->bindValue(":category" , $this->source_category, PDO::PARAM_STR);
                           $stmt_insert->bindValue(":source_id" , $source_id, PDO::PARAM_STR);
                           $stmt_insert->bindValue(":source_name" , $this->source_title, PDO::PARAM_STR);
                           $stmt_insert->bindValue(":source_equivalent" , $source_equivalent, PDO::PARAM_STR);
@@ -884,29 +890,52 @@ trait ProductivityCommand
       try {
         $source_list = "";
 
-        $sql = "SELECT source_id, source_name, is_absolute
+        $sql = "SELECT category
         FROM reference_source_list
         WHERE 1=1
               AND upload_status = '1'
-        GROUP BY source_id
-        ORDER BY source_name ASC ";
-        $data = $this->querySelect($sql);
-        if ($data) {
+        GROUP BY category
+        ORDER BY category ASC ";
+        $data2 = $this->querySelect($sql);
+        if ($data2) {
 
           $source_list .= "<ul class='list-group list-group-flush list-group-item-action'>";
           $source_list .="<li class='list-group-item' style='background-color: #3c8aea; color: white'>DATA SOURCE LIST</li>";
-          foreach ($data as $row) {
-              if ($row['is_absolute']) {
-                      $source = "[[" . $row['source_name'] . "]]";
-              } else  $source = $row['source_name'];
 
-             $source_list .= '<li class="list-group-item">
-             <a href="#" class="sourceList" style="text-decoration:none"
-             data-id="' . $row['source_id'] . '"><i class="fas fa-angle-right"></i> ' . $source . '</a></li>';
+          foreach ($data2 as $row2) {
+            $category = $row2['category'] ;
+            if (!$category) $ctg = "N/A";
+            else $ctg = strtoupper($category);
 
-          }
+            $source_list .="<li class='list-group-item' style='background-color: #3069af; color: white'><small><i class=\"fas fa-dot-circle\"></i></small> <i>$ctg</i></li>";
+            $sql = "SELECT source_id, source_name, is_absolute
+            FROM reference_source_list
+            WHERE 1=1
+                  AND upload_status = '1'
+                  AND category = '$category'
+            GROUP BY source_id
+            ORDER BY source_name ASC ";
+            $data = $this->querySelect($sql);
+            if ($data) {
+
+              foreach ($data as $row) {
+                  if ($row['is_absolute']) {
+                          $source = "[[" . $row['source_name'] . "]]";
+                  } else  $source = $row['source_name'];
+
+                 $source_list .= '<li class="list-group-item">
+                 <a href="#" class="sourceList" style="text-decoration:none; margin-left: 5px;"
+                 data-id="' . $row['source_id'] . '"><i class="fas fa-angle-right"></i> ' . $source . '</a></li>';
+
+              }
+            } // if data
+
+          } // foreach data2
           $source_list .= "</ul>";
-        }
+
+        } // if data 2
+
+
 
         return $source_list;
 

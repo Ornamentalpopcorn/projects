@@ -113,6 +113,7 @@ if (isset($_POST['key'])) {
                   $obj = new Productivity();
                   $obj->source_title = $_POST['sourcename'];
                   $obj->source_type = $_POST['sourcetype'];
+                  $obj->source_category = $_POST['category'];
                   $obj->source = $_POST['sql'];
 
                   $result = $obj->saveSource();
